@@ -1,0 +1,17 @@
+development:
+  adapter:  mysql2
+  host:     localhost
+  database: cached_record_development
+  username: root
+  password:
+  pool: 5
+  timeout: 5000
+
+test:
+  adapter:  mysql2
+  host:     localhost
+  database: cached_record_test
+  username: root
+  password:
+  pool: 5
+  timeout: 5000

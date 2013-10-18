@@ -2,6 +2,7 @@
 
 require "bundler"
 Bundler.require :default, :console
+require_relative "setup"
 
 puts "Loading CachedRecord development environment (#{CachedRecord::VERSION})"
 Pry.start

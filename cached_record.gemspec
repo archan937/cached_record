@@ -19,4 +19,10 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "mocha"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "pry"
+  gem.add_development_dependency "mysql2"
+  gem.add_development_dependency "activerecord"
+  gem.add_development_dependency "data_mapper"
+  gem.add_development_dependency "dm-mysql-adapter"
+  gem.add_development_dependency "memcached"
+  gem.add_development_dependency "redis"
 end
