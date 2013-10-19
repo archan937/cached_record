@@ -10,6 +10,12 @@ module Unit
         assert File.read(path "CHANGELOG.rdoc").include?("Version #{version}")
         assert File.read(path "VERSION").include?(version)
       end
+
+      it "sets up ActiveRecord and DataMapper" do
+        CachedRecord::ORM::ActiveRecord.expects(:setup)
+        CachedRecord::ORM::DataMapper.expects(:setup)
+        cached_record
+      end
     end
 
   end

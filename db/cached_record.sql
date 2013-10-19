@@ -42,7 +42,7 @@ LOCK TABLES `articles` WRITE;
 
 INSERT INTO `articles` (`id`, `title`, `content`, `author_id`, `published_at`, `created_at`, `updated_at`)
 VALUES
-  (1,'Behold! It\'s CachedRecord!','Cache ORM instances to avoid database querties',1,'2013-10-18 23:40:01','2013-10-18 23:39:53','2013-10-18 23:39:53');
+  (1,'Behold! It\'s CachedRecord!','Cache ORM instances to avoid database querties',1,'2013-08-01 12:00:00','2013-08-01 10:00:00','2013-08-01 11:00:00');
 
 /*!40000 ALTER TABLE `articles` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -68,7 +68,7 @@ LOCK TABLES `users` WRITE;
 
 INSERT INTO `users` (`id`, `name`, `description`, `active`, `created_at`, `updated_at`)
 VALUES
-  (1,'Paul Engel','Author of CachedRecord',1,'2013-10-18 23:39:11','2013-10-18 23:39:11');
+  (1,'Paul Engel','Author of CachedRecord',1,'2013-08-01 11:00:00','2013-08-01 12:00:00');
 
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
