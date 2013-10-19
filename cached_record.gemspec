@@ -15,12 +15,12 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = CachedRecord::VERSION
 
-  gem.add_development_dependency "minitest"
+  gem.add_development_dependency "minitest", "~> 4.2"
   gem.add_development_dependency "mocha"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "pry"
   gem.add_development_dependency "mysql2"
-  gem.add_development_dependency "activerecord"
+  gem.add_development_dependency "activerecord", "4.0.0"
   gem.add_development_dependency "data_mapper"
   gem.add_development_dependency "dm-mysql-adapter"
   gem.add_development_dependency "memcached"
