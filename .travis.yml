@@ -2,3 +2,7 @@ language: ruby
 rvm:
   - 2.0.0
   - 1.9.3
+before_script:
+  - printf "test:\n  adapter: mysql2\n  database: cached_record_test\n  username: travis\n  encoding: utf8" > config/database.yml
+  - mysql -e "create database cached_record_test;"
+  - mysql cached_record_test < db/cached_record.sql
