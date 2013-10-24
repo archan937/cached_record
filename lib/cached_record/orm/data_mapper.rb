@@ -15,11 +15,21 @@ module CachedRecord
           def self.included(base)
             included_without_cached_record base
             base.extend ORM::ClassMethods
+            base.extend ClassMethods
           end
         end
         ::DataMapper::Resource.send :include, ORM::InstanceMethods
         ::DataMapper::Resource.send :include, InstanceMethods
         true
+      end
+
+      module ClassMethods
+        def uncached(id)
+          get(id)
+        end
+        def load_cache_json(json)
+          new(json)
+        end
       end
 
       module InstanceMethods

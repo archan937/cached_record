@@ -9,8 +9,18 @@ module CachedRecord
       def self.setup
         return false unless setup?
         ::ActiveRecord::Base.send :include, ORM
+        ::ActiveRecord::Base.extend ClassMethods
         ::ActiveRecord::Base.send :include, InstanceMethods
         true
+      end
+
+      module ClassMethods
+        def uncached(id)
+          find(id)
+        end
+        def load_cache_json(json)
+          new(json)
+        end
       end
 
       module InstanceMethods

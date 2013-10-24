@@ -12,9 +12,16 @@ module Unit
       end
 
       it "sets up ActiveRecord and DataMapper" do
+        CachedRecord::Cache.expects(:redis).with(:host => "127.0.0.1")
+        CachedRecord::Cache.expects(:memcached).with(:host => "0.0.0.0")
+
         CachedRecord::ORM::ActiveRecord.expects(:setup)
         CachedRecord::ORM::DataMapper.expects(:setup)
-        cached_record
+
+        cached_record do
+          redis :host => "127.0.0.1"
+          memcached :host => "0.0.0.0"
+        end
       end
     end
 
