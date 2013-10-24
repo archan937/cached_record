@@ -23,6 +23,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "activerecord", "4.0.0"
   gem.add_development_dependency "data_mapper"
   gem.add_development_dependency "dm-mysql-adapter"
-  gem.add_development_dependency "memcached"
+  gem.add_development_dependency "dalli"
   gem.add_development_dependency "redis"
 end

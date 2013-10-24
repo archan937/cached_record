@@ -14,5 +14,5 @@ group :test do
   gem "simplecov", :require => false
   gem "data_mapper"
   gem "dm-mysql-adapter"
-  gem "memcached"
+  gem "dalli"
 end
