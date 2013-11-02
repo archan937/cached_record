@@ -4,28 +4,14 @@ module Unit
   class TestCache < MiniTest::Unit::TestCase
 
     describe CachedRecord::Cache do
-      describe "setup" do
-        before do
-          CachedRecord::Cache.instance_variable_set :@stores, nil
-        end
-        after do
-          cached_record { memcached; redis }
-        end
-        it "knows whether it is set up" do
-          assert_equal false, CachedRecord::Cache.setup?
-          CachedRecord::Cache.instance_variable_set :@stores, {:redis => mock}
-          assert_equal true, CachedRecord::Cache.setup?
-        end
-        describe "when not specifing a cache store" do
-          it "raises an error " do
-            assert_raises CachedRecord::Cache::Error do
-              cached_record
-            end
-          end
-        end
+      after do
+        CachedRecord::Cache.instance_variable_set :@stores, nil
       end
 
       describe "memcached" do
+        after do
+          Dalli::Client.unstub :new
+        end
         it "initiates a Dalli::Client instance" do
           Dalli::Client.expects(:new).with "127.0.0.1:11211", {}
           CachedRecord::Cache.memcached :host => "127.0.0.1"
@@ -40,6 +26,9 @@ module Unit
       end
 
       describe "redis" do
+        after do
+          Redis.unstub :new
+        end
         it "initiates a Redis instance" do
           Redis.expects(:new).with :host => "127.0.0.1"
           CachedRecord::Cache.redis :host => "127.0.0.1"
@@ -90,7 +79,6 @@ module Unit
             describe "with one cache store" do
               it "returns the cache store" do
                 CachedRecord::Cache.instance_variable_set :@stores, {:memcached => mock}
-                CachedRecord::Cache.expects(:send).with(:memcached)
                 CachedRecord::Cache.store(@klass)
               end
             end

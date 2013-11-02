@@ -2,10 +2,6 @@ module CachedRecord
   module Cache
     class Error < StandardError; end
 
-    def self.setup?
-      stores.any?
-    end
-
     def self.memcached(options = nil)
       if stores[:memcached].nil? || options
         options ||= {}
@@ -32,10 +28,10 @@ module CachedRecord
           raise Error, "Cannot determine default cache store (store size is not 1: #{@stores.keys.sort.inspect})"
         end
       end
-      if @stores.include? store
+      if [:memcached, :redis].include?(store.to_sym)
         send store
       else
-        raise Error, "Invalid cache store used (#{store.inspect}, valid: #{@stores.keys.sort.inspect})"
+        raise Error, "Invalid cache store :#{store} passed"
       end
     end
 

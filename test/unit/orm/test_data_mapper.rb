@@ -37,7 +37,6 @@ module Unit
         describe "DataMapper::Resource included" do
           before do
             @redis = Redis.new
-            @redis.flushdb
           end
           it "returns its cache JSON hash" do
             assert_equal({

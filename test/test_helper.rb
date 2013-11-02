@@ -12,3 +12,10 @@ end
 require "bundler"
 Bundler.require :default, :test
 require_relative "test_helper/setup"
+
+class MiniTest::Unit::TestCase
+  def teardown
+    Redis.new.flushdb
+    Dalli::Client.new.flush
+  end
+end

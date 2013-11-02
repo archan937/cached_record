@@ -18,7 +18,7 @@ module Unit
         CachedRecord::ORM::ActiveRecord.expects(:setup)
         CachedRecord::ORM::DataMapper.expects(:setup)
 
-        cached_record do
+        CachedRecord.setup do
           redis :host => "127.0.0.1"
           memcached :host => "0.0.0.0"
         end

@@ -7,6 +7,7 @@ group :test, :console do
   gem "pry"
   gem "mysql2"
   gem "activerecord", :require => "active_record"
+  gem "dalli"
   gem "redis"
 end
 
@@ -14,5 +15,4 @@ group :test do
   gem "simplecov", :require => false
   gem "data_mapper"
   gem "dm-mysql-adapter"
-  gem "dalli"
 end

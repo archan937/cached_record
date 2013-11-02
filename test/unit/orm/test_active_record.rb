@@ -31,8 +31,7 @@ module Unit
 
         describe "ActiveRecord::Base instances" do
           before do
-            @memcached = Dalli::Client.new "localhost:11211"
-            @memcached.flush
+            @memcached = Dalli::Client.new
           end
           it "returns its cache JSON hash" do
             assert_equal({
