@@ -43,6 +43,16 @@ module Unit
       end
 
       describe "cache store" do
+        describe ".valid_store?" do
+          it "returns whether the passed argument is a valid cache store" do
+            assert_equal true, CachedRecord::Cache.valid_store?("redis")
+            assert_equal true, CachedRecord::Cache.valid_store?("memcached")
+            assert_equal true, CachedRecord::Cache.valid_store?(:redis)
+            assert_equal true, CachedRecord::Cache.valid_store?(:memcached)
+            assert_equal false, CachedRecord::Cache.valid_store?("foo")
+            assert_equal false, CachedRecord::Cache.valid_store?(:foo)
+          end
+        end
         describe ".store" do
           describe "with as_cache[:store]" do
             describe "when valid" do

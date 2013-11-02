@@ -4,12 +4,18 @@ require "cached_record/orm"
 
 module CachedRecord
 
-  def self.setup(&block)
-    if block_given?
-      CachedRecord::Cache.class_eval &block
+  def self.setup(*args)
+    args.each do |arg|
+      if arg.is_a?(Hash)
+        arg.each do |store, options|
+          Cache.setup store, options
+        end
+      else
+        Cache.setup arg
+      end
     end
-    CachedRecord::ORM::ActiveRecord.setup
-    CachedRecord::ORM::DataMapper.setup
+    ORM::ActiveRecord.setup
+    ORM::DataMapper.setup
   end
 
 end

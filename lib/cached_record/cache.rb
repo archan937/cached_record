@@ -2,6 +2,12 @@ module CachedRecord
   module Cache
     class Error < StandardError; end
 
+    def self.setup(store, options = {})
+      if valid_store? store
+        send store, options
+      end
+    end
+
     def self.memcached(options = nil)
       if stores[:memcached].nil? || options
         options ||= {}
@@ -20,21 +26,6 @@ module CachedRecord
       stores[:redis]
     end
 
-    def self.store(klass)
-      store = klass.as_cache[:store] || begin
-        if stores.size == 1
-          stores.keys.first
-        else
-          raise Error, "Cannot determine default cache store (store size is not 1: #{@stores.keys.sort.inspect})"
-        end
-      end
-      if [:memcached, :redis].include?(store.to_sym)
-        send store
-      else
-        raise Error, "Invalid cache store :#{store} passed"
-      end
-    end
-
     def self.get(klass, id)
       if cache_json = store(klass).get(klass.cache_key(id))
         klass.load_cache_json JSON.parse(cache_json)
@@ -47,8 +38,27 @@ module CachedRecord
 
   private
 
+    def self.valid_store?(arg)
+      [:memcached, :redis].include?(arg.to_sym)
+    end
+
     def self.stores
       @stores ||= {}
+    end
+
+    def self.store(klass)
+      store = klass.as_cache[:store] || begin
+        if stores.size == 1
+          stores.keys.first
+        else
+          raise Error, "Cannot determine default cache store (store size is not 1: #{@stores.keys.sort.inspect})"
+        end
+      end
+      if valid_store?(store)
+        send(store)
+      else
+        raise Error, "Invalid cache store :#{store} passed"
+      end
     end
 
   end
