@@ -5,15 +5,23 @@ module Unit
 
     class A
       include CachedRecord::ORM
-      as_cache :redis, :only => [:title]
+      as_cache :redis, "only" => [:title], :include => ["@memval"]
     end
 
     describe CachedRecord::ORM do
       describe "when extended within a class" do
 
         describe "classes" do
+          it "validates and parses 'as cache json options'" do
+            assert_raises ArgumentError do
+              A.as_cache :foonly => []
+            end
+            assert_raises ArgumentError do
+              A.as_cache :only => :foo
+            end
+          end
           it "stores its cache options" do
-            assert_equal({:store => :redis, :as_json => {:only => [:title]}}, A.as_cache)
+            assert_equal({:store => :redis, :as_json => {:only => [:title], :include => [:@memval]}}, A.as_cache)
           end
           it "memoizes its cache options" do
             options = A.as_cache
@@ -39,6 +47,9 @@ module Unit
             assert_raises NotImplementedError do
               A.new.as_cache_json
             end
+          end
+          it "knows its as cache JSON options" do
+            assert_equal({:only => [:title], :include => [:@memval]}, A.new.send(:cache_json_options))
           end
           it "returns a cache JSON string" do
             hash = mock
