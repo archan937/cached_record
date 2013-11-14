@@ -42,7 +42,12 @@ module CachedRecord
       end
 
       def load_cache_json(json)
-        raise NotImplementedError, "Cannot load `#{self.class}` instances from cache JSON"
+        instance_variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
+        new(attributes).tap do |instance|
+          instance_variables.each do |name, value|
+            instance.instance_variable_set name, value
+          end
+        end
       end
 
     private

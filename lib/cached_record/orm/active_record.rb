@@ -18,14 +18,6 @@ module CachedRecord
         def uncached(id)
           find(id)
         end
-        def load_cache_json(json)
-          instance_variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
-          new(attributes).tap do |instance|
-            instance_variables.each do |name, value|
-              instance.instance_variable_set name, value
-            end
-          end
-        end
       end
 
       module InstanceMethods

@@ -74,11 +74,6 @@ module Unit
               A.uncached 1
             end
           end
-          it "requires an implemented `load_cache_json` method" do
-            assert_raises NotImplementedError do
-              A.load_cache_json "{}"
-            end
-          end
         end
 
         describe "instances" do
