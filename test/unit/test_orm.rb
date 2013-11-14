@@ -5,7 +5,17 @@ module Unit
 
     class A
       include CachedRecord::ORM
-      as_cache :redis, "only" => [:title], :include => ["@memval"]
+      as_cache :redis, "only" => [:title], :include => [:b], :memoize => [:sequence]
+    end
+
+    class B
+      include CachedRecord::ORM
+      as_cache :redis, "only" => [:title], :include => [:b], "memoize" => {"calculate" => :@array}
+    end
+
+    class C
+      include CachedRecord::ORM
+      as_cache :redis, :only => [:title], "include" => [:b], :memoize => [:sequence, {:calculate => "@array"}]
     end
 
     describe CachedRecord::ORM do
@@ -19,9 +29,38 @@ module Unit
             assert_raises ArgumentError do
               A.as_cache :only => :foo
             end
+            assert_raises ArgumentError do
+              A.as_cache :include => :foo
+            end
+            assert_raises ArgumentError do
+              A.as_cache :memoize => :foo
+            end
           end
           it "stores its cache options" do
-            assert_equal({:store => :redis, :as_json => {:only => [:title], :include => [:@memval]}}, A.as_cache)
+            assert_equal({
+              :store => :redis,
+              :as_json => {
+                :only => [:title],
+                :include => [:b],
+                :memoize => {:sequence => :@sequence}
+              }
+            }, A.as_cache)
+            assert_equal({
+              :store => :redis,
+              :as_json => {
+                :only => [:title],
+                :include => [:b],
+                :memoize => {:calculate => :@array}
+              }
+            }, B.as_cache)
+            assert_equal({
+              :store => :redis,
+              :as_json => {
+                :only => [:title],
+                :include => [:b],
+                :memoize => {:sequence => :@sequence, :calculate => :@array}
+              }
+            }, C.as_cache)
           end
           it "memoizes its cache options" do
             options = A.as_cache
@@ -49,7 +88,21 @@ module Unit
             end
           end
           it "knows its as cache JSON options" do
-            assert_equal({:only => [:title], :include => [:@memval]}, A.new.send(:cache_json_options))
+            assert_equal({
+              :only => [:title],
+              :include => [:b],
+              :memoize => {:sequence => :@sequence}
+            }, A.new.send(:cache_json_options))
+            assert_equal({
+              :only => [:title],
+              :include => [:b],
+              :memoize => {:calculate => :@array}
+            }, B.new.send(:cache_json_options))
+            assert_equal({
+              :only => [:title],
+              :include => [:b],
+              :memoize => {:sequence => :@sequence, :calculate => :@array}
+            }, C.new.send(:cache_json_options))
           end
           it "returns a cache JSON string" do
             hash = mock

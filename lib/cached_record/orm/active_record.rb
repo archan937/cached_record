@@ -19,15 +19,23 @@ module CachedRecord
           find(id)
         end
         def load_cache_json(json)
-          new(json)
+          instance_variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
+          new(attributes).tap do |instance|
+            instance_variables.each do |name, value|
+              instance.instance_variable_set name, value
+            end
+          end
         end
       end
 
       module InstanceMethods
         def as_cache_json
-          as_json.inject({}) do |json, (key, value)|
-            json[key.to_sym] = value
-            json
+          options = cache_json_options
+          {:id => id}.tap do |json|
+            json.merge! as_json(options.slice(:only, :include)).symbolize_keys!
+            (options[:memoize] || {}).each do |method, variable|
+              json[variable] = send method
+            end
           end
         end
       end

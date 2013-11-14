@@ -14,7 +14,7 @@ module CachedRecord
       def as_cache(*args)
         if args.any?
           store = args.first if args.first.is_a? Symbol
-          as_json = parse_as_cache_json_options(
+          as_json = parse_as_cache_json_options!(
             args.inject({}){|h, arg| arg.is_a?(Hash) ? h.merge(arg) : h}
           )
           @as_cache = {
@@ -47,13 +47,35 @@ module CachedRecord
 
     private
 
-      def parse_as_cache_json_options(options)
+      def parse_as_cache_json_options!(options)
         options = options.symbolize_keys
-        options.assert_valid_keys :only, :include
-        options.inject({}) do |hash, (key, value)|
+        validate_as_cache_json_options options
+        parse_as_cache_json_options options
+      end
+
+      def validate_as_cache_json_options(options)
+        options.assert_valid_keys :only, :include, :memoize
+        options.slice(:only, :include).each do |key, value|
           raise ArgumentError unless value.is_a?(Array)
-          hash[key] = value.collect(&:to_sym)
-          hash
+        end
+        if options[:memoize] && !options[:memoize].is_a?(Enumerable)
+          raise ArgumentError
+        end
+      end
+
+      def parse_as_cache_json_options(options)
+        only = options[:only].collect(&:to_sym) if options[:only]
+        included = options[:include].collect(&:to_sym) if options[:include]
+
+        memoized = [options[:memoize]].flatten.inject({}) do |memo, x|
+          hash = x.is_a?(Hash) ? x : {x => :"@#{x}"}
+          memo.merge hash.inject({}){|h, (k, v)| h[k.to_sym] = v.to_sym; h}
+        end if options[:memoize]
+
+        {}.tap do |options|
+          options[:only] = only if only
+          options[:include] = included unless included.blank?
+          options[:memoize] = memoized unless memoized.blank?
         end
       end
 
