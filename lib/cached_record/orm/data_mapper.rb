@@ -32,16 +32,24 @@ module CachedRecord
       module InstanceMethods
         def as_cache_json
           options = cache_json_options
-          {:id => id}.tap do |json|
-            as_json_hash = as_json options.slice(:include)
-            if options[:only]
-              keys = options[:only] + (options[:include] || [])
-              as_json_hash = as_json_hash.select{|k, v| keys.include? k}
-            end
-            json.merge! as_json_hash
-            (options[:memoize] || {}).each do |method, variable|
-              json[variable] = send method
-            end
+
+          attributes = as_json options.slice(:include)
+          if options[:only]
+            keys = options[:only] + (options[:include] || [])
+            attributes = attributes.select{|k, v| keys.include? k}
+          end
+
+          attributes = {:id => id}.merge! attributes
+          variables = (options[:memoize] || {}).inject({}) do |hash, (method, variable)|
+            hash[variable] = send method
+            hash
+          end
+
+          if options[:include_root]
+            variables = variables.inject({}){|h, (k, v)| h[k.to_s.gsub(/^@/, "").to_sym] = v; h}
+            {self.class.cache_root => attributes}.merge! variables
+          else
+            attributes.merge! variables
           end
         end
       end

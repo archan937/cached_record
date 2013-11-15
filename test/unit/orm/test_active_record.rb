@@ -31,6 +31,15 @@ module Unit
         end
       end
 
+      class Earticle < ActiveRecord::Base
+        self.table_name = "articles"
+        as_cache :memcached, :only => [:title, :content], :memoize => {:random_array => :@array}, :include_root => true
+
+        def random_array
+          @array ||= [rand(10)]
+        end
+      end
+
       describe CachedRecord::ORM::ActiveRecord do
         describe "when ActiveRecord is not defined" do
           it "knows not to setup ActiveRecord::Base" do
@@ -190,14 +199,14 @@ module Unit
 
           describe "Darticle" do
             it "returns its cache JSON hash" do
-              c = Darticle.find(1)
-              c.expects(:rand).returns(5)
+              d = Darticle.find(1)
+              d.expects(:rand).returns(5)
               assert_equal({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties",
                 :@array => [5]
-              }, c.as_cache_json)
+              }, d.as_cache_json)
             end
             it "can be stored in the cache store" do
               Darticle.any_instance.expects(:rand).returns(4)
@@ -234,6 +243,61 @@ module Unit
               assert_equal([
                 3
               ], Darticle.cached(1).instance_variable_get(:@array))
+            end
+          end
+
+          describe "Earticle" do
+            it "returns its cache JSON hash" do
+              e = Earticle.find(1)
+              e.expects(:rand).returns(5)
+              assert_equal({
+                :earticle => {
+                  :id => 1,
+                  :title => "Behold! It's CachedRecord!",
+                  :content => "Cache ORM instances to avoid database querties"
+                },
+                :array => [5]
+              }, e.as_cache_json)
+            end
+            it "can be stored in the cache store" do
+              Earticle.any_instance.expects(:rand).returns(4)
+              Earticle.cached(1)
+              assert_equal({
+                :earticle => {
+                  :id => 1,
+                  :title => "Behold! It's CachedRecord!",
+                  :content => "Cache ORM instances to avoid database querties"
+                },
+                :array => [4]
+              }.to_json, @memcached.get("unit.orm.test_active_record.earticle.1"))
+            end
+            it "can be fetched from the cache store" do
+              Earticle.expects(:uncached).never
+              @memcached.set(
+                "unit.orm.test_active_record.earticle.1", {
+                  :earticle => {
+                    :id => 1,
+                    :title => "Behold! It's CachedRecord!",
+                    :content => "Cache ORM instances to avoid database querties"
+                  },
+                  :array => [3]
+                }.to_json
+              )
+              assert_equal({
+                "id" => 1,
+                "title" => "Behold! It's CachedRecord!",
+                "content" => "Cache ORM instances to avoid database querties",
+                "author_id" => nil,
+                "published_at" => nil,
+                "created_at" => nil,
+                "updated_at" => nil
+              }, Earticle.cached(1).attributes)
+              assert_equal(
+                true, Earticle.cached(1).instance_variables.include?(:@array)
+              )
+              assert_equal([
+                3
+              ], Earticle.cached(1).instance_variable_get(:@array))
             end
           end
         end

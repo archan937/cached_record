@@ -29,6 +29,10 @@ module CachedRecord
         "#{name.underscore.gsub("/", ".")}.#{id}"
       end
 
+      def cache_root
+        "#{name.underscore.gsub(/^.*\//, "")}".to_sym
+      end
+
       def cached(id)
         Cache.get(self, id) || begin
           instance = uncached(id)
@@ -42,7 +46,13 @@ module CachedRecord
       end
 
       def load_cache_json(json)
-        instance_variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
+        json.symbolize_keys!
+        if as_cache[:as_json][:include_root]
+          attributes = json.delete cache_root
+          instance_variables = json.inject({}){|h, (k, v)| h[:"@#{k}"] = v; h}
+        else
+          instance_variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
+        end
         new(attributes).tap do |instance|
           instance_variables.each do |name, value|
             instance.instance_variable_set name, value
@@ -59,11 +69,14 @@ module CachedRecord
       end
 
       def validate_as_cache_json_options(options)
-        options.assert_valid_keys :only, :include, :memoize
+        options.assert_valid_keys :only, :include, :memoize, :include_root
         options.slice(:only, :include).each do |key, value|
           raise ArgumentError unless value.is_a?(Array)
         end
         if options[:memoize] && !options[:memoize].is_a?(Enumerable)
+          raise ArgumentError
+        end
+        if options.include?(:include_root) && ![true, false].include?(options[:include_root])
           raise ArgumentError
         end
       end
@@ -73,6 +86,7 @@ module CachedRecord
           opts[:only] = symbolize_array(options[:only]) if options[:only]
           opts[:include] = symbolize_array(options[:include]) if options[:include]
           opts[:memoize] = parse_memoize_options(options[:memoize]) if options[:memoize]
+          opts[:include_root] = true if options[:include_root]
         end
       end
 

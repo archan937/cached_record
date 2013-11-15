@@ -18,6 +18,11 @@ module Unit
       as_cache :redis, :only => [:title], "include" => [:b], :memoize => [:sequence, {:calculate => "@array"}]
     end
 
+    class D
+      include CachedRecord::ORM
+      as_cache :redis, :only => [:title], :include_root => true
+    end
+
     describe CachedRecord::ORM do
       describe "when extended within a class" do
 
@@ -34,6 +39,9 @@ module Unit
             end
             assert_raises ArgumentError do
               A.as_cache :memoize => :foo
+            end
+            assert_raises ArgumentError do
+              A.as_cache :include_root => :foo
             end
           end
           it "stores its cache options" do
@@ -61,6 +69,13 @@ module Unit
                 :memoize => {:sequence => :@sequence, :calculate => :@array}
               }
             }, C.as_cache)
+            assert_equal({
+              :store => :redis,
+              :as_json => {
+                :only => [:title],
+                :include_root => true
+              }
+            }, D.as_cache)
           end
           it "memoizes its cache options" do
             options = A.as_cache
@@ -98,6 +113,10 @@ module Unit
               :include => [:b],
               :memoize => {:sequence => :@sequence, :calculate => :@array}
             }, C.new.send(:cache_json_options))
+            assert_equal({
+              :only => [:title],
+              :include_root => true
+            }, D.new.send(:cache_json_options))
           end
           it "returns a cache JSON string" do
             hash = mock
