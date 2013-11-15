@@ -69,18 +69,21 @@ module CachedRecord
       end
 
       def parse_as_cache_json_options(options)
-        only = options[:only].collect(&:to_sym) if options[:only]
-        included = options[:include].collect(&:to_sym) if options[:include]
+        {}.tap do |opts|
+          opts[:only] = symbolize_array(options[:only]) if options[:only]
+          opts[:include] = symbolize_array(options[:include]) if options[:include]
+          opts[:memoize] = parse_memoize_options(options[:memoize]) if options[:memoize]
+        end
+      end
 
-        memoized = [options[:memoize]].flatten.inject({}) do |memo, x|
+      def symbolize_array(array)
+        array.collect &:to_sym
+      end
+
+      def parse_memoize_options(options)
+        [options].flatten.inject({}) do |memo, x|
           hash = x.is_a?(Hash) ? x : {x => :"@#{x}"}
           memo.merge hash.inject({}){|h, (k, v)| h[k.to_sym] = v.to_sym; h}
-        end if options[:memoize]
-
-        {}.tap do |options|
-          options[:only] = only if only
-          options[:include] = included unless included.blank?
-          options[:memoize] = memoized unless memoized.blank?
         end
       end
 
