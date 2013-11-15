@@ -49,12 +49,16 @@ module CachedRecord
         json.symbolize_keys!
         if as_cache[:as_json][:include_root]
           attributes = json.delete cache_root
-          instance_variables = json.inject({}){|h, (k, v)| h[:"@#{k}"] = v; h}
+          variables = json.inject({}){|h, (k, v)| h[:"@#{k}"] = v; h}
         else
-          instance_variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
+          variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
         end
+        new_cached_instance attributes, variables
+      end
+
+      def new_cached_instance(attributes, variables)
         new(attributes).tap do |instance|
-          instance_variables.each do |name, value|
+          variables.each do |name, value|
             instance.instance_variable_set name, value
           end
         end
@@ -106,7 +110,25 @@ module CachedRecord
     module InstanceMethods
 
       def as_cache_json
-        raise NotImplementedError, "Cannot return cache JSON hash for `#{self.class}` instances"
+        attributes = {:id => id}.merge cache_attributes
+        variables = (cache_json_options[:memoize] || {}).inject({}) do |hash, (method, variable)|
+          hash[variable] = send method
+          hash
+        end
+        merge_cache_json attributes, variables
+      end
+
+      def merge_cache_json(attributes, variables)
+        if cache_json_options[:include_root]
+          variables = variables.inject({}){|h, (k, v)| h[k.to_s.gsub(/^@/, "").to_sym] = v; h}
+          {self.class.cache_root => attributes}.merge variables
+        else
+          attributes.merge variables
+        end
+      end
+
+      def cache_attributes
+        raise NotImplementedError, "Cannot return cache attributes for `#{self.class}` instances"
       end
 
       def to_cache_json

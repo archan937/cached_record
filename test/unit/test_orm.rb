@@ -6,6 +6,7 @@ module Unit
     class A
       include CachedRecord::ORM
       as_cache :redis, "only" => [:title], :include => [:b], :memoize => [:sequence]
+      def id; end
     end
 
     class B
@@ -92,9 +93,9 @@ module Unit
         end
 
         describe "instances" do
-          it "requires an implemented `as_cache_json` method" do
+          it "requires an implemented `cache_attributes` method" do
             assert_raises NotImplementedError do
-              A.new.as_cache_json
+              A.new.cache_attributes
             end
           end
           it "knows its as cache JSON options" do
