@@ -25,6 +25,12 @@ module CachedRecord
         @as_cache ||= {}
       end
 
+      def as_memoized_cache(*args)
+        as_cache(*args).tap do |options|
+          options[:memoize] = true
+        end
+      end
+
       def cache_key(id)
         "#{name.underscore.gsub("/", ".")}.#{id}"
       end
@@ -34,10 +40,8 @@ module CachedRecord
       end
 
       def cached(id)
-        Cache.get(self, id) || begin
-          instance = uncached(id)
-          Cache.set(instance)
-          instance
+        Cache.get(self, id) do
+          uncached id
         end
       end
 
@@ -109,6 +113,10 @@ module CachedRecord
 
     module InstanceMethods
 
+      def cache_attributes
+        raise NotImplementedError, "Cannot return cache attributes for `#{self.class}` instances"
+      end
+
       def as_cache_json
         attributes = {:id => id}.merge cache_attributes
         variables = (cache_json_options[:memoize] || {}).inject({}) do |hash, (method, variable)|
@@ -125,10 +133,6 @@ module CachedRecord
         else
           attributes.merge variables
         end
-      end
-
-      def cache_attributes
-        raise NotImplementedError, "Cannot return cache attributes for `#{self.class}` instances"
       end
 
       def to_cache_json

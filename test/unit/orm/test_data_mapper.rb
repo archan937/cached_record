@@ -61,6 +61,19 @@ module Unit
         end
       end
 
+      class Farticle
+        include DataMapper::Resource
+        storage_names[:default] = "articles"
+        property :id, Serial, :key => true
+        property :title, String
+        property :content, Text
+        as_memoized_cache :redis, :only => [:title, :content], :memoize => {:random_array => :@array}, :include_root => true
+
+        def random_array
+          @array ||= [rand(10)]
+        end
+      end
+
       DataMapper.finalize
 
       describe CachedRecord::ORM::DataMapper do
@@ -287,6 +300,40 @@ module Unit
               assert_equal([
                 3
               ], Earticle.cached(1).instance_variable_get(:@array))
+            end
+            it "is not memoized" do
+              assert_equal false, (Earticle.cached(1).object_id == Earticle.cached(1).object_id)
+            end
+          end
+
+          describe "Farticle" do
+            it "can be fetched from the cache store" do
+              Farticle.expects(:uncached).never
+              @redis.set(
+                "unit.orm.test_data_mapper.farticle.1", {
+                  :farticle => {
+                    :id => 1,
+                    :title => "Behold! It's CachedRecord!",
+                    :content => "Cache ORM instances to avoid database querties"
+                  },
+                  :array => [3]
+                }.to_json
+              )
+              assert_equal({
+                :id => 1,
+                :title => "Behold! It's CachedRecord!",
+                :content => "Cache ORM instances to avoid database querties"
+              }, Farticle.cached(1).attributes)
+              assert_equal(
+                true, Farticle.cached(1).instance_variables.include?(:@array)
+              )
+              assert_equal([
+                3
+              ], Farticle.cached(1).instance_variable_get(:@array))
+            end
+            it "is memoized" do
+              assert_equal Farticle.cached(1).object_id, Farticle.cached(1).object_id
+              assert_equal Farticle.cached(1).object_id, Farticle.cached(1).object_id
             end
           end
         end

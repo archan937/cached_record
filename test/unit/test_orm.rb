@@ -78,12 +78,21 @@ module Unit
               }
             }, D.as_cache)
           end
+          it "stores whether it should memoize instances" do
+            options = {}
+            A.expects(:as_cache).with(:foo => :bar).returns(options)
+            A.as_memoized_cache :foo => :bar
+            assert_equal options, {:memoize => true}
+          end
           it "memoizes its cache options" do
             options = A.as_cache
             assert_equal options.object_id, A.as_cache.object_id
           end
           it "returns cache keys" do
             assert_equal "unit.test_orm.a.123", A.cache_key(123)
+          end
+          it "returns the cache root" do
+            assert_equal :a, A.cache_root
           end
           it "requires an implemented `uncached` method" do
             assert_raises NotImplementedError do
@@ -131,10 +140,13 @@ module Unit
         describe ".cached" do
           describe "when not having a cache entry" do
             it "returns an uncached instance and stores its cache JSON in the cache store" do
-              uncached_instance = mock
-              CachedRecord::Cache.expects(:get).with(A, 123).returns nil
+              uncached_instance = A.new
+              uncached_instance.expects(:to_cache_json).returns({})
+
+              A.stubs(:as_cache).returns({:store => :redis, :as_json => {}})
               A.expects(:uncached).with(123).returns uncached_instance
-              CachedRecord::Cache.expects(:set).with uncached_instance
+              A.expects(:new).returns uncached_instance
+
               assert_equal uncached_instance, A.cached(123)
             end
           end

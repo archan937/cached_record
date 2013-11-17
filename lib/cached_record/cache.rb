@@ -26,14 +26,42 @@ module CachedRecord
       stores[:redis]
     end
 
+    def self.cache
+      @cache ||= {Dalli::Client => {}, Redis => {}}
+    end
+
+    def self.clear!
+      @cache = nil
+    end
+
     def self.get(klass, id)
-      if cache_json = store(klass).get(klass.cache_key(id))
-        klass.load_cache_json JSON.parse(cache_json)
+      cache_string = store(klass).get(klass.cache_key(id)) || begin
+        return unless (instance = yield if block_given?)
+        set instance
+      end
+      json, epoch_time = split_cache_string(cache_string)
+      memoized(klass, id, epoch_time) do
+        klass.load_cache_json JSON.parse(json)
       end
     end
 
     def self.set(instance)
-      store(instance.class).set(instance.class.cache_key(instance.id), instance.to_cache_json)
+      "#{instance.to_cache_json}#{"@#{Time.now.to_i}" if instance.class.as_cache[:memoize]}".tap do |cache_string|
+        store(instance.class).set instance.class.cache_key(instance.id), cache_string
+      end
+    end
+
+    def self.memoized(klass, id, epoch_time)
+      return yield unless klass.as_cache[:memoize]
+      cache_hash, cache_key = cache[store(klass).class], klass.cache_key(id)
+
+      if (cache_entry = cache_hash[cache_key]) && (epoch_time == cache_entry[:epoch_time])
+        cache_entry[:instance]
+      else
+        yield.tap do |instance|
+          cache_hash[cache_key] = {:instance => instance, :epoch_time => epoch_time} if instance
+        end
+      end
     end
 
   private
@@ -59,6 +87,14 @@ module CachedRecord
       else
         raise Error, "Invalid cache store :#{store} passed"
       end
+    end
+
+    def self.split_cache_string(string)
+      reg_exp = /@(\d+)$/
+      string.match(reg_exp)
+      json = string.gsub(reg_exp, "")
+      epoch_time = $1.to_i if $1
+      [json, epoch_time]
     end
 
   end

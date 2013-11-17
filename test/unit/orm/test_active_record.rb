@@ -40,6 +40,15 @@ module Unit
         end
       end
 
+      class Farticle < ActiveRecord::Base
+        self.table_name = "articles"
+        as_memoized_cache :memcached, :only => [:title, :content], :memoize => {:random_array => :@array}, :include_root => true
+
+        def random_array
+          @array ||= [rand(10)]
+        end
+      end
+
       describe CachedRecord::ORM::ActiveRecord do
         describe "when ActiveRecord is not defined" do
           it "knows not to setup ActiveRecord::Base" do
@@ -298,6 +307,44 @@ module Unit
               assert_equal([
                 3
               ], Earticle.cached(1).instance_variable_get(:@array))
+            end
+            it "is not memoized" do
+              assert_equal false, (Earticle.cached(1).object_id == Earticle.cached(1).object_id)
+            end
+          end
+
+          describe "Farticle" do
+            it "can be fetched from the cache store" do
+              Farticle.expects(:uncached).never
+              @memcached.set(
+                "unit.orm.test_active_record.farticle.1", {
+                  :farticle => {
+                    :id => 1,
+                    :title => "Behold! It's CachedRecord!",
+                    :content => "Cache ORM instances to avoid database querties"
+                  },
+                  :array => [3]
+                }.to_json
+              )
+              assert_equal({
+                "id" => 1,
+                "title" => "Behold! It's CachedRecord!",
+                "content" => "Cache ORM instances to avoid database querties",
+                "author_id" => nil,
+                "published_at" => nil,
+                "created_at" => nil,
+                "updated_at" => nil
+              }, Farticle.cached(1).attributes)
+              assert_equal(
+                true, Farticle.cached(1).instance_variables.include?(:@array)
+              )
+              assert_equal([
+                3
+              ], Farticle.cached(1).instance_variable_get(:@array))
+            end
+            it "is memoized" do
+              assert_equal Farticle.cached(1).object_id, Farticle.cached(1).object_id
+              assert_equal Farticle.cached(1).object_id, Farticle.cached(1).object_id
             end
           end
         end

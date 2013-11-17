@@ -17,5 +17,6 @@ class MiniTest::Unit::TestCase
   def teardown
     Redis.new.flushdb
     Dalli::Client.new.flush
+    CachedRecord::Cache.clear!
   end
 end
