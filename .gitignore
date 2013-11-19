@@ -3,5 +3,6 @@
 .rvmrc
 Gemfile.lock
 doc
+log
 pkg
-test/coverage/*
+test/coverage
