@@ -1,3 +1,6 @@
+require "dalli"
+require "redis"
+
 module CachedRecord
   module Cache
     class Error < StandardError; end

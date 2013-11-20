@@ -40,6 +40,7 @@ module CachedRecord
       end
 
       def cached(id)
+        return nil if as_cache.empty?
         Cache.get(self, id) do
           uncached id
         end
@@ -52,23 +53,32 @@ module CachedRecord
       def load_cache_json(json)
         json.symbolize_keys!
         if as_cache[:as_json][:include_root]
-          attributes = json.delete cache_root
+          properties = json.delete cache_root
           variables = json.inject({}){|h, (k, v)| h[:"@#{k}"] = v; h}
         else
-          variables, attributes = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
+          variables, properties = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
         end
-        new_cached_instance attributes, variables
+        foreign_keys, attributes = properties.partition{|k, v| k.to_s.match /_ids?$/}.collect{|x| Hash[x]}
+        new_cached_instance attributes, foreign_keys, variables
       end
 
-      def new_cached_instance(attributes, variables)
+      def new_cached_instance(attributes, foreign_keys, variables)
         new(attributes).tap do |instance|
-          variables.each do |name, value|
-            instance.instance_variable_set name, value
+          instance.id = attributes[:id] || attributes["id"] if instance.respond_to?(:id=)
+          foreign_keys.each do |key, value|
+            set_cached_association instance, key, value
+          end
+          variables.each do |key, value|
+            instance.instance_variable_set key, value
           end
         end
       end
 
     private
+
+      def set_cached_association(instance, key, value)
+        raise NotImplementedError, "Cannot set cached association for `#{self}` instances"
+      end
 
       def parse_as_cache_json_options!(options)
         options = options.symbolize_keys
@@ -115,6 +125,10 @@ module CachedRecord
 
       def cache_attributes
         raise NotImplementedError, "Cannot return cache attributes for `#{self.class}` instances"
+      end
+
+      def cache_foreign_keys
+        raise NotImplementedError, "Cannot return cache foreign keys for `#{self.class}` instances"
       end
 
       def as_cache_json

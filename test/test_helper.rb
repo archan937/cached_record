@@ -10,13 +10,7 @@ def path(path)
 end
 
 require "bundler"
-Bundler.require :default, :test
-require_relative "test_helper/setup"
+Bundler.require :default, :development, :test
 
-class MiniTest::Unit::TestCase
-  def teardown
-    Redis.new.flushdb
-    Dalli::Client.new.flush
-    CachedRecord::Cache.clear!
-  end
-end
+require_relative "test_helper/setup"
+require_relative "test_helper/minitest"

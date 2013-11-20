@@ -49,6 +49,30 @@ module Unit
         end
       end
 
+      class Garticle < ActiveRecord::Base
+        self.table_name = "articles"
+        belongs_to :author, :class_name => "Unit::ORM::TestActiveRecord::User"
+        has_many :comments, :class_name => "Unit::ORM::TestActiveRecord::Comment", :foreign_key => "article_id"
+        has_and_belongs_to_many :tags, :class_name => "Unit::ORM::TestActiveRecord::Tag", :join_table => "articles_tags", :foreign_key => "article_id"
+        as_cache :memcached, :only => [:title], :include => [:author, :comments, :tags]
+      end
+
+      class User < ActiveRecord::Base
+        has_one :foo, :class_name => "Unit::ORM::TestActiveRecord::Article", :foreign_key => "foo_id"
+        as_cache :redis, :only => [:name], :include => [:foo]
+      end
+
+      class Comment < ActiveRecord::Base
+        belongs_to :article, :class_name => "Unit::ORM::TestActiveRecord::Garticle"
+        belongs_to :poster, :class_name => "Unit::ORM::TestActiveRecord::User"
+        as_cache :memcached, :only => [:content], :include => [:poster]
+      end
+
+      class Tag < ActiveRecord::Base
+        has_and_belongs_to_many :articles, :class_name => "Unit::ORM::TestActiveRecord::Garticle", :join_table => "articles_tags", :foreign_key => "tag_id"
+        as_cache :memcached, :only => [:name]
+      end
+
       describe CachedRecord::ORM::ActiveRecord do
         describe "when ActiveRecord is not defined" do
           it "knows not to setup ActiveRecord::Base" do
@@ -73,15 +97,17 @@ module Unit
         describe "ActiveRecord::Base instances" do
           before do
             @memcached = Dalli::Client.new
+            @redis = Redis.new
           end
 
           describe "Article" do
             it "returns its cache JSON hash" do
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties",
                 :author_id => 1,
+                :foo_id => 2,
                 :published_at => Time.parse("2013-08-01 12:00:00"),
                 :created_at => Time.parse("2013-08-01 10:00:00"),
                 :updated_at => Time.parse("2013-08-01 11:00:00")
@@ -89,38 +115,44 @@ module Unit
             end
             it "can be stored in the cache store" do
               Article.cached(1)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties",
                 :author_id => 1,
+                :foo_id => 2,
                 :published_at => Time.parse("2013-08-01 12:00:00"),
                 :created_at => Time.parse("2013-08-01 10:00:00"),
                 :updated_at => Time.parse("2013-08-01 11:00:00")
-              }.to_json, @memcached.get("unit.orm.test_active_record.article.1"))
+              }, @memcached.get("unit.orm.test_active_record.article.1"))
             end
             it "can be fetched from the cache store" do
-              Article.expects(:uncached).never
+              Article.expects(:find).never
               @memcached.set(
                 "unit.orm.test_active_record.article.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
                   :content => "Cache ORM instances to avoid database querties",
                   :author_id => 1,
+                  :foo_id => 2,
                   :published_at => Time.parse("2013-08-01 12:00:00"),
                   :created_at => Time.parse("2013-08-01 10:00:00"),
                   :updated_at => Time.parse("2013-08-01 11:00:00")
                 }.to_json
               )
-              assert_equal({
+              assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
                 "author_id" => 1,
+                "foo_id" => 2,
                 "published_at" => Time.parse("2013-08-01 12:00:00"),
                 "created_at" => Time.parse("2013-08-01 10:00:00"),
                 "updated_at" => Time.parse("2013-08-01 11:00:00")
               }, Article.cached(1).attributes)
+            end
+            it "is not a new record" do
+              assert_equal false, Article.cached(1).new_record?
             end
           end
 
@@ -134,14 +166,14 @@ module Unit
             end
             it "can be stored in the cache store" do
               Barticle.cached(1)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties"
-              }.to_json, @memcached.get("unit.orm.test_active_record.barticle.1"))
+              }, @memcached.get("unit.orm.test_active_record.barticle.1"))
             end
             it "can be fetched from the cache store" do
-              Barticle.expects(:uncached).never
+              Barticle.expects(:find).never
               @memcached.set(
                 "unit.orm.test_active_record.barticle.1", {
                   "id" => 1,
@@ -154,6 +186,7 @@ module Unit
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
                 "author_id" => nil,
+                "foo_id" => nil,
                 "published_at" => nil,
                 "created_at" => nil,
                 "updated_at" => nil
@@ -173,13 +206,13 @@ module Unit
             it "can be stored in the cache store" do
               Carticle.any_instance.expects(:rand).returns(4)
               Carticle.cached(1)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :@random_array => [4]
-              }.to_json, @memcached.get("unit.orm.test_active_record.carticle.1"))
+              }, @memcached.get("unit.orm.test_active_record.carticle.1"))
             end
             it "can be fetched from the cache store" do
-              Carticle.expects(:uncached).never
+              Carticle.expects(:find).never
               @memcached.set(
                 "unit.orm.test_active_record.carticle.1", {
                   :id => 1,
@@ -193,6 +226,7 @@ module Unit
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
                 "author_id" => nil,
+                "foo_id" => nil,
                 "published_at" => nil,
                 "created_at" => nil,
                 "updated_at" => nil
@@ -220,15 +254,15 @@ module Unit
             it "can be stored in the cache store" do
               Darticle.any_instance.expects(:rand).returns(4)
               Darticle.cached(1)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties",
                 :@array => [4]
-              }.to_json, @memcached.get("unit.orm.test_active_record.darticle.1"))
+              }, @memcached.get("unit.orm.test_active_record.darticle.1"))
             end
             it "can be fetched from the cache store" do
-              Darticle.expects(:uncached).never
+              Darticle.expects(:find).never
               @memcached.set(
                 "unit.orm.test_active_record.darticle.1", {
                   :id => 1,
@@ -242,6 +276,7 @@ module Unit
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
                 "author_id" => nil,
+                "foo_id" => nil,
                 "published_at" => nil,
                 "created_at" => nil,
                 "updated_at" => nil
@@ -271,17 +306,17 @@ module Unit
             it "can be stored in the cache store" do
               Earticle.any_instance.expects(:rand).returns(4)
               Earticle.cached(1)
-              assert_equal({
+              assert_equal_hashes({
                 :earticle => {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
                   :content => "Cache ORM instances to avoid database querties"
                 },
                 :array => [4]
-              }.to_json, @memcached.get("unit.orm.test_active_record.earticle.1"))
+              }, @memcached.get("unit.orm.test_active_record.earticle.1"))
             end
             it "can be fetched from the cache store" do
-              Earticle.expects(:uncached).never
+              Earticle.expects(:find).never
               @memcached.set(
                 "unit.orm.test_active_record.earticle.1", {
                   :earticle => {
@@ -297,6 +332,7 @@ module Unit
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
                 "author_id" => nil,
+                "foo_id" => nil,
                 "published_at" => nil,
                 "created_at" => nil,
                 "updated_at" => nil
@@ -315,7 +351,7 @@ module Unit
 
           describe "Farticle" do
             it "can be fetched from the cache store" do
-              Farticle.expects(:uncached).never
+              Farticle.expects(:find).never
               @memcached.set(
                 "unit.orm.test_active_record.farticle.1", {
                   :farticle => {
@@ -331,6 +367,7 @@ module Unit
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
                 "author_id" => nil,
+                "foo_id" => nil,
                 "published_at" => nil,
                 "created_at" => nil,
                 "updated_at" => nil
@@ -345,6 +382,162 @@ module Unit
             it "is memoized" do
               assert_equal Farticle.cached(1).object_id, Farticle.cached(1).object_id
               assert_equal Farticle.cached(1).object_id, Farticle.cached(1).object_id
+            end
+          end
+
+          describe "Garticle" do
+            it "returns its cache JSON hash" do
+              g = Garticle.find(1)
+              assert_equal({
+                :id => 1,
+                :title => "Behold! It's CachedRecord!",
+                :author_id => 1,
+                :_comment_ids => [1, 2],
+                :_tag_ids => [1, 2]
+              }, g.as_cache_json)
+            end
+            it "can be stored in the cache store" do
+              Garticle.cached(1)
+              assert_equal_hashes({
+                :id => 1,
+                :title => "Behold! It's CachedRecord!",
+                :author_id => 1,
+                :_comment_ids => [1, 2],
+                :_tag_ids => [1, 2]
+              }, @memcached.get("unit.orm.test_active_record.garticle.1"))
+              assert_equal_hashes({
+                :id => 1,
+                :name => "Paul Engel",
+                :_foo_id => nil
+              }, @redis.get("unit.orm.test_active_record.user.1"))
+              assert_equal_hashes({
+                :id => 2,
+                :name => "Ken Adams",
+                :_foo_id => 1
+              }, @redis.get("unit.orm.test_active_record.user.2"))
+              assert_equal_hashes({
+                :id => 1,
+                :content => "What a great article! :)",
+                :poster_id => 2
+              }, @memcached.get("unit.orm.test_active_record.comment.1"))
+              assert_equal_hashes({
+                :id => 2,
+                :content => "Thanks!",
+                :poster_id => 1
+              }, @memcached.get("unit.orm.test_active_record.comment.2"))
+            end
+            it "can be fetched from the cache store" do
+              Garticle.expects(:find).never
+              User.expects(:find).never
+              Comment.expects(:find).never
+              Tag.expects(:find).never
+              @memcached.set(
+                "unit.orm.test_active_record.garticle.1", {
+                  :id => 1,
+                  :title => "Behold! It's CachedRecord!",
+                  :author_id => 1,
+                  :_comment_ids => [1, 2],
+                  :_tag_ids => [1, 2]
+                }.to_json
+              )
+              @redis.set(
+                "unit.orm.test_active_record.user.1", {
+                  :id => 1,
+                  :name => "Paul Engel"
+                }.to_json
+              )
+              @redis.set(
+                "unit.orm.test_active_record.user.2", {
+                  :id => 2,
+                  :name => "Ken Adams"
+                }.to_json
+              )
+              @memcached.set(
+                "unit.orm.test_active_record.comment.1", {
+                  :id => 1,
+                  :content => "What a great article! :)",
+                  :poster_id => 2
+                }.to_json
+              )
+              @memcached.set(
+                "unit.orm.test_active_record.comment.2", {
+                  :id => 2,
+                  :content => "Thanks!",
+                  :poster_id => 1
+                }.to_json
+              )
+              @memcached.set(
+                "unit.orm.test_active_record.tag.1", {
+                  :id => 1,
+                  :name => "ruby"
+                }.to_json
+              )
+              @memcached.set(
+                "unit.orm.test_active_record.tag.2", {
+                  :id => 2,
+                  :name => "gem"
+                }.to_json
+              )
+              g = Garticle.cached(1)
+              assert_equal({
+                "id" => 1,
+                "title" => "Behold! It's CachedRecord!",
+                "content" => nil,
+                "author_id" => 1,
+                "foo_id" => nil,
+                "published_at" => nil,
+                "created_at" => nil,
+                "updated_at" => nil
+              }, g.attributes)
+              assert_equal({
+                "id" => 1,
+                "name" => "Paul Engel",
+                "description" => nil,
+                "active" => nil,
+                "created_at" => nil,
+                "updated_at" => nil
+              }, g.author.attributes)
+              assert_equal([{
+                "id" => 1,
+                "name" => "ruby",
+                "created_at" => nil,
+                "updated_at" => nil
+              }, {
+                "id" => 2,
+                "name" => "gem",
+                "created_at" => nil,
+                "updated_at" => nil
+              }], g.tags.collect(&:attributes))
+              assert_equal([{
+                "id" => 1,
+                "content" => "What a great article! :)",
+                "article_id" => nil,
+                "poster_id" => 2,
+                "created_at" => nil,
+                "updated_at" => nil
+              }, {
+                "id" => 2,
+                "content" => "Thanks!",
+                "article_id" => nil,
+                "poster_id" => 1,
+                "created_at" => nil,
+                "updated_at" => nil
+              }], g.comments.collect(&:attributes))
+              assert_equal([{
+                "id" => 2,
+                "name" => "Ken Adams",
+                "description" => nil,
+                "active" => nil,
+                "created_at" => nil,
+                "updated_at" => nil
+              }, {
+                "id" => 1,
+                "name" => "Paul Engel",
+                "description" => nil,
+                "active" => nil,
+                "created_at" => nil,
+                "updated_at" => nil
+              }], g.comments.collect{|x| x.poster.attributes})
             end
           end
         end

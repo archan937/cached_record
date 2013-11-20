@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "bundler"
-Bundler.require :default, :console
+Bundler.require :default, :development
 require_relative "setup"
 
 puts "Loading CachedRecord development environment (#{CachedRecord::VERSION})"

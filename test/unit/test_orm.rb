@@ -99,12 +99,22 @@ module Unit
               A.uncached 1
             end
           end
+          it "requires an implemented `set_cached_association` method" do
+            assert_raises NotImplementedError do
+              A.send :set_cached_association, :a, :b, :c
+            end
+          end
         end
 
         describe "instances" do
           it "requires an implemented `cache_attributes` method" do
             assert_raises NotImplementedError do
               A.new.cache_attributes
+            end
+          end
+          it "requires an implemented `cache_foreign_keys` method" do
+            assert_raises NotImplementedError do
+              A.new.cache_foreign_keys
             end
           end
           it "knows its as cache JSON options" do
