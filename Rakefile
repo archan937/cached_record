@@ -23,12 +23,14 @@ namespace :db do
       ActiveRecord::Base.establish_connection dbconfig.merge("database" => nil)
       ActiveRecord::Base.connection.create_database dbconfig["database"], options
 
-      `#{[
-        "mysql",
-        "-u#{dbconfig["username"]}",
-       ("-p#{dbconfig["password"]}" unless dbconfig["password"].to_s.empty?),
-        "#{dbconfig["database"]} < db/cached_record.sql"
-      ].compact.join(" ")}`
+      `#{
+        [
+          "mysql",
+         ("-h #{host}" unless host.blank?), ("-P #{port}" unless port.blank?),
+          "-u #{user}", ("-p#{password}" unless password.blank?),
+          "#{dbconfig["database"]} < db/cached_record.sql"
+        ].compact.join(" ")
+      }`
     end
 
     puts "Done."

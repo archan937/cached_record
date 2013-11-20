@@ -14,3 +14,4 @@ Bundler.require :default, :development, :test
 
 require_relative "test_helper/setup"
 require_relative "test_helper/minitest"
+require_relative "test_helper/db"
