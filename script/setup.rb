@@ -13,9 +13,24 @@ CachedRecord.setup :redis
 Redis.new.flushdb
 
 class Article < ActiveRecord::Base
-  belongs_to :user
+  belongs_to :author, :class_name => "User"
+  has_many :comments
+  has_and_belongs_to_many :tags
+  as_cache :redis, :only => [:title], :include => [:author, :comments, :tags]
 end
 
 class User < ActiveRecord::Base
-  has_many :articles
+  has_one :foo, :class_name => "Article", :foreign_key => "foo_id"
+  as_cache :redis, :only => [:name], :include => [:foo]
+end
+
+class Comment < ActiveRecord::Base
+  belongs_to :article
+  belongs_to :poster, :class_name => "User"
+  as_cache :redis, :only => [:content], :include => [:poster]
+end
+
+class Tag < ActiveRecord::Base
+  has_and_belongs_to_many :articles
+  as_cache :redis, :only => [:name]
 end

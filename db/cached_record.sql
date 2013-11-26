@@ -19,12 +19,14 @@ DROP TABLE IF EXISTS `articles_tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `articles_tags` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `article_id` int(11) DEFAULT NULL,
   `tag_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
   KEY `articles_tags` (`article_id`,`tag_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `articles_tags` VALUES (1,1),(1,2);
+INSERT INTO `articles_tags` VALUES (1,1,1),(2,1,2);
 DROP TABLE IF EXISTS `comments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

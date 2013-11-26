@@ -57,7 +57,7 @@ module CachedRecord
             [value = send(association)].flatten.compact.each{|instance| Cache.set instance}
             case reflection.macro
             when :belongs_to
-              json[:"#{reflection.foreign_key}"] = value.id
+              json[:"#{reflection.foreign_key}"] = value.try(:id)
             when :has_one
               json[:"_#{association.to_s.singularize}_id"] = value.try(:id)
             when :has_many, :has_and_belongs_to_many

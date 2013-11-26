@@ -114,7 +114,7 @@ module Unit
               }, Article.find(1).as_cache_json)
             end
             it "can be stored in the cache store" do
-              Article.cached(1)
+              Article.cached 1
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
@@ -158,7 +158,7 @@ module Unit
 
           describe "Barticle" do
             it "returns its cache JSON hash" do
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties"
@@ -181,7 +181,7 @@ module Unit
                   "content" => "Cache ORM instances to avoid database querties"
                 }.to_json
               )
-              assert_equal({
+              assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
@@ -198,7 +198,7 @@ module Unit
             it "returns its cache JSON hash" do
               c = Carticle.find(1)
               c.expects(:rand).returns(5)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :@random_array => [5]
               }, c.as_cache_json)
@@ -221,7 +221,7 @@ module Unit
                   :@random_array => [3]
                 }.to_json
               )
-              assert_equal({
+              assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
@@ -244,7 +244,7 @@ module Unit
             it "returns its cache JSON hash" do
               d = Darticle.find(1)
               d.expects(:rand).returns(5)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :content => "Cache ORM instances to avoid database querties",
@@ -271,7 +271,7 @@ module Unit
                   :@array => [3]
                 }.to_json
               )
-              assert_equal({
+              assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
@@ -294,7 +294,7 @@ module Unit
             it "returns its cache JSON hash" do
               e = Earticle.find(1)
               e.expects(:rand).returns(5)
-              assert_equal({
+              assert_equal_hashes({
                 :earticle => {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
@@ -327,7 +327,7 @@ module Unit
                   :array => [3]
                 }.to_json
               )
-              assert_equal({
+              assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
@@ -362,7 +362,7 @@ module Unit
                   :array => [3]
                 }.to_json
               )
-              assert_equal({
+              assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
                 "content" => "Cache ORM instances to avoid database querties",
@@ -388,7 +388,7 @@ module Unit
           describe "Garticle" do
             it "returns its cache JSON hash" do
               g = Garticle.find(1)
-              assert_equal({
+              assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
                 :author_id => 1,

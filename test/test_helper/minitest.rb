@@ -15,6 +15,7 @@ module MiniTest::Assertions
   end
 private
   def recursive_symbolize_keys(hash)
+    return unless hash
     hash.inject({}) do |hash, (key, value)|
       hash[key.to_sym] = value.is_a?(Hash) ? recursive_symbolize_keys(hash) : value
       hash
