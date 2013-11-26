@@ -26,24 +26,26 @@ module CachedRecord
       private
         def set_cached_association(instance, key, value)
           return unless value
-          reflection = begin
-            if key.to_s.match /^_(.*)_ids?/
-              reflections[$1.pluralize.to_sym]
-            else
-              instance.send :"#{key}=", value
-              reflections.detect{|k, v| v.foreign_key == key.to_s}.try(:last)
-            end
+          if reflection = _cache_reflection_(instance, key, value)
+            value = _cache_value_(instance, reflection, value)
+            instance.send :"#{reflection.name}=", value
           end
-          return unless reflection
-          value = begin
-            if value.is_a? Array
-              (instance.respond_to?(:association) ? instance.association(reflection.name) : instance.send(reflection.name).instance_variable_get(:@association)).loaded!
-              value.collect{|x| reflection.klass.cached x}
-            else
-              reflection.klass.cached value
-            end
+        end
+        def _cache_reflection_(instance, key, value)
+          if key.to_s.match /^_(.*)_ids?/
+            reflections[$1.pluralize.to_sym]
+          else
+            instance.send :"#{key}=", value
+            reflections.detect{|k, v| v.foreign_key == key.to_s}.try(:last)
           end
-          instance.send :"#{reflection.name}=", value
+        end
+        def _cache_value_(instance, reflection, value)
+          if value.is_a? Array
+            (instance.respond_to?(:association) ? instance.association(reflection.name) : instance.send(reflection.name).instance_variable_get(:@association)).loaded!
+            value.collect{|x| reflection.klass.cached x}
+          else
+            reflection.klass.cached value
+          end
         end
       end
 
@@ -52,18 +54,20 @@ module CachedRecord
           as_json(cache_json_options.slice(:only).merge(:root => false)).symbolize_keys!.merge cache_foreign_keys
         end
         def cache_foreign_keys
-          (cache_json_options[:include] || {}).inject({}) do |json, association|
-            reflection = self.class.reflections[association]
-            [value = send(association)].flatten.compact.each{|instance| Cache.set instance}
-            case reflection.macro
-            when :belongs_to
-              json[:"#{reflection.foreign_key}"] = value.try(:id)
-            when :has_one
-              json[:"_#{association.to_s.singularize}_id"] = value.try(:id)
-            when :has_many, :has_and_belongs_to_many
-              json[:"_#{association.to_s.singularize}_ids"] = value.collect(&:id)
-            end
-            json
+          (cache_json_options[:include] || {}).inject({}) do |json, name|
+            reflection = self.class.reflections[name]
+            [value = send(name)].flatten.compact.each{|instance| Cache.set instance}
+            json.merge cache_foreign_key(name, reflection, value)
+          end
+        end
+        def cache_foreign_key(name, reflection, value)
+          case reflection.macro
+          when :belongs_to
+            {:"#{reflection.foreign_key}" => value.try(:id)}
+          when :has_one
+            {:"_#{name.to_s.singularize}_id" => value.try(:id)}
+          when :has_many, :has_and_belongs_to_many
+            {:"_#{name.to_s.singularize}_ids" => value.collect(&:id)}
           end
         end
       end

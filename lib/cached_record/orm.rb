@@ -52,12 +52,7 @@ module CachedRecord
 
       def load_cache_json(json)
         json.symbolize_keys!
-        if as_cache[:as_json][:include_root]
-          properties = json.delete cache_root
-          variables = json.inject({}){|h, (k, v)| h[:"@#{k}"] = v; h}
-        else
-          variables, properties = json.partition{|k, v| k.to_s.match /^@/}.collect{|x| Hash[x]}
-        end
+        properties, variables = cache_json_to_properties_and_variables(json)
         foreign_keys, attributes = properties.partition{|k, v| k.to_s.match /_ids?$/}.collect{|x| Hash[x]}
         new_cached_instance attributes, foreign_keys, variables
       end
@@ -116,6 +111,16 @@ module CachedRecord
         [options].flatten.inject({}) do |memo, x|
           hash = x.is_a?(Hash) ? x : {x => :"@#{x}"}
           memo.merge hash.inject({}){|h, (k, v)| h[k.to_sym] = v.to_sym; h}
+        end
+      end
+
+      def cache_json_to_properties_and_variables(json)
+        if as_cache[:as_json][:include_root]
+          properties = json.delete cache_root
+          variables = json.inject({}){|h, (k, v)| h[:"@#{k}"] = v; h}
+          [properties, variables]
+        else
+          json.partition{|k, v| !k.to_s.match(/^@/)}.collect{|x| Hash[x]}
         end
       end
 
