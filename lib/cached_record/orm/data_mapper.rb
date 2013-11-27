@@ -33,6 +33,9 @@ module CachedRecord
           end
         end
       private
+        def _new_cached_instance_(id, attributes)
+          new attributes.merge(:id => id)
+        end
         def set_cached_association(instance, key, value)
           return unless value
           if relationship = _cache_relationship_(instance, key, value)

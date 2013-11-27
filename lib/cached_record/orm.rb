@@ -58,8 +58,9 @@ module CachedRecord
       end
 
       def new_cached_instance(attributes, foreign_keys, variables)
-        new(attributes).tap do |instance|
-          instance.id = attributes[:id] || attributes["id"] if instance.respond_to?(:id=)
+        id = attributes.delete(:id) || attributes.delete("id")
+        _new_cached_instance_(id, attributes).tap do |instance|
+          instance.id = id if instance.respond_to?(:id=)
           foreign_keys.each do |key, value|
             set_cached_association instance, key, value
           end
@@ -70,6 +71,10 @@ module CachedRecord
       end
 
     private
+
+      def _new_cached_instance_(id, attributes)
+        new attributes
+      end
 
       def set_cached_association(instance, key, value)
         raise NotImplementedError, "Cannot set cached association for `#{self}` instances"
