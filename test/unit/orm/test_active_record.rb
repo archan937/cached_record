@@ -54,23 +54,23 @@ module Unit
         belongs_to :author, :class_name => "Unit::ORM::TestActiveRecord::User"
         has_many :comments, :class_name => "Unit::ORM::TestActiveRecord::Comment", :foreign_key => "article_id"
         has_and_belongs_to_many :tags, :class_name => "Unit::ORM::TestActiveRecord::Tag", :join_table => "articles_tags", :foreign_key => "article_id"
-        as_cache :memcached, :only => [:title], :include => [:author, :comments, :tags]
+        as_memoized_cache :memcached, :only => [:title], :include => [:author, :comments, :tags]
       end
 
       class User < ActiveRecord::Base
         has_one :foo, :class_name => "Unit::ORM::TestActiveRecord::Article", :foreign_key => "foo_id"
-        as_cache :redis, :only => [:name], :include => [:foo]
+        as_memoized_cache :redis, :only => [:name], :include => [:foo]
       end
 
       class Comment < ActiveRecord::Base
         belongs_to :article, :class_name => "Unit::ORM::TestActiveRecord::Garticle"
         belongs_to :poster, :class_name => "Unit::ORM::TestActiveRecord::User"
-        as_cache :memcached, :only => [:content], :include => [:poster]
+        as_memoized_cache :memcached, :only => [:content], :include => [:poster]
       end
 
       class Tag < ActiveRecord::Base
         has_and_belongs_to_many :articles, :class_name => "Unit::ORM::TestActiveRecord::Garticle", :join_table => "articles_tags", :foreign_key => "tag_id"
-        as_cache :memcached, :only => [:name]
+        as_memoized_cache :memcached, :only => [:name]
       end
 
       describe CachedRecord::ORM::ActiveRecord do
@@ -538,6 +538,7 @@ module Unit
                 "created_at" => nil,
                 "updated_at" => nil
               }], g.comments.collect{|x| x.poster.attributes})
+              assert_equal g.author.object_id, g.comments[1].poster.object_id
             end
           end
         end

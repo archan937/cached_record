@@ -83,7 +83,7 @@ module Unit
         has n, :comments, :model => "Unit::ORM::TestDataMapper::Comment", :child_key => "article_id"
         has n, :taggings, :model => "Unit::ORM::TestDataMapper::Tagging", :child_key => "article_id"
         has n, :tags, :through => :taggings
-        as_cache :redis, :only => [:title], :include => [:author, :comments, :tags]
+        as_memoized_cache :redis, :only => [:title], :include => [:author, :comments, :tags]
       end
 
       class User
@@ -92,7 +92,7 @@ module Unit
         property :id, Serial, :key => true
         property :name, String
         has 1, :foo, :model => "Unit::ORM::TestDataMapper::Article", :child_key => "foo_id"
-        as_cache :memcached, :only => [:name], :include => [:foo]
+        as_memoized_cache :memcached, :only => [:name], :include => [:foo]
       end
 
       class Comment
@@ -102,7 +102,7 @@ module Unit
         property :content, Text
         belongs_to :article, :model => "Unit::ORM::TestDataMapper::Garticle"
         belongs_to :poster, :model => "Unit::ORM::TestDataMapper::User"
-        as_cache :redis, :only => [:content], :include => [:poster]
+        as_memoized_cache :redis, :only => [:content], :include => [:poster]
       end
 
       class Tag
@@ -111,7 +111,7 @@ module Unit
         property :id, Serial, :key => true
         property :name, String
         has n, :articles, :model => "Unit::ORM::TestDataMapper::Garticle", :through => Resource
-        as_cache :redis, :only => [:name]
+        as_memoized_cache :redis, :only => [:name]
       end
 
       class Tagging
@@ -520,6 +520,7 @@ module Unit
                 :id => 1,
                 :name => "Paul Engel"
               }], g.comments.collect{|x| x.poster.attributes})
+              assert_equal g.author.object_id, g.comments[1].poster.object_id
             end
           end
         end

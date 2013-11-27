@@ -9,8 +9,8 @@ end
 module MiniTest::Assertions
   def assert_equal_hashes exp, act, msg = nil
     msg = message(msg, "") { diff exp, act }
-    exp = JSON.parse(exp) if exp.is_a?(String)
-    act = JSON.parse(act) if act.is_a?(String)
+    exp = JSON.parse(exp.gsub(/@\d+$/, "")) if exp.is_a?(String)
+    act = JSON.parse(act.gsub(/@\d+$/, "")) if act.is_a?(String)
     assert(recursive_symbolize_keys(exp) == recursive_symbolize_keys(act), msg)
   end
 private
