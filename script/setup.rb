@@ -1,5 +1,6 @@
 require "yaml"
 require "logger"
+require "active_record"
 
 dbconfig = YAML.load_file(File.expand_path("../../config/database.yml", __FILE__))["development"]
 logger = Logger.new("log/development.log")

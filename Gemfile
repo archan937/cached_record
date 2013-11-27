@@ -4,7 +4,6 @@ gemspec
 
 group :development, :test do
   gem "cached_record", :path => "."
-  gem "activerecord", :require => "active_record"
 end
 
 group :test do
