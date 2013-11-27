@@ -1,6 +1,6 @@
 == CachedRecord {<img src="https://secure.travis-ci.org/archan937/cached_record.png"/>}[http://travis-ci.org/archan937/cached_record] {<img src="https://codeclimate.com/github/archan937/cached_record.png"/>}[https://codeclimate.com/github/archan937/cached_record]
 
-Cache ORM instances to avoid database queries.
+Cache (and optionally memoize) ActiveRecord or DataMapper records in Redis or Memcached to avoid database queries.
 
 === Installation
 
@@ -23,7 +23,7 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor 
 * Write documentation
 * Set expiration period for cache values
 * Flush cache values
-* Delete memoized parent instances with child instance is expired
+* Delete memoized parent instances when child instance expires
 
 === License
 
