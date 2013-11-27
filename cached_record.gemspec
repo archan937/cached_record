@@ -4,8 +4,8 @@ require File.expand_path("../lib/cached_record/version", __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Paul Engel"]
   gem.email         = ["pm_engel@icloud.com"]
-  gem.summary       = %q{Cache ORM instances to avoid database querties}
-  gem.description   = %q{Cache ORM instances to avoid database querties}
+  gem.summary       = %q{Cache ORM instances to avoid database queries}
+  gem.description   = %q{Cache ORM instances to avoid database queries}
   gem.homepage      = "https://github.com/archan937/cached_record"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }

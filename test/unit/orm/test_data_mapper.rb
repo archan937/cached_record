@@ -154,7 +154,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :foo_id => 2
               }, Article.get(1).as_cache_json)
             end
@@ -163,7 +163,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :foo_id => 2
               }, @redis.get("unit.orm.test_data_mapper.article.1"))
             end
@@ -173,13 +173,13 @@ module Unit
                 "unit.orm.test_data_mapper.article.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties"
+                  :content => "Cache ORM instances to avoid database queries"
                 }.to_json
               )
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :foo_id => 2
               }, Article.cached(1).attributes)
             end
@@ -193,7 +193,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Barticle.get(1).as_cache_json)
             end
             it "can be stored in the cache store" do
@@ -201,7 +201,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, @redis.get("unit.orm.test_data_mapper.barticle.1"))
             end
             it "can be fetched from the cache store" do
@@ -210,13 +210,13 @@ module Unit
                 "unit.orm.test_data_mapper.barticle.1", {
                   "id" => 1,
                   "title" => "Behold! It's CachedRecord!",
-                  "content" => "Cache ORM instances to avoid database querties"
+                  "content" => "Cache ORM instances to avoid database queries"
                 }.to_json
               )
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Barticle.cached(1).attributes)
             end
           end
@@ -244,14 +244,14 @@ module Unit
                 "unit.orm.test_data_mapper.carticle.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties",
+                  :content => "Cache ORM instances to avoid database queries",
                   :@random_array => [3]
                 }.to_json
               )
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Carticle.cached(1).attributes)
               assert_equal(
                 true, Carticle.cached(1).instance_variables.include?(:@random_array)
@@ -269,7 +269,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :@array => [5]
               }, d.as_cache_json)
             end
@@ -279,7 +279,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :@array => [4]
               }.to_json, @redis.get("unit.orm.test_data_mapper.darticle.1"))
             end
@@ -289,14 +289,14 @@ module Unit
                 "unit.orm.test_data_mapper.darticle.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties",
+                  :content => "Cache ORM instances to avoid database queries",
                   :@array => [3]
                 }.to_json
               )
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Darticle.cached(1).attributes)
               assert_equal(
                 true, Darticle.cached(1).instance_variables.include?(:@array)
@@ -315,7 +315,7 @@ module Unit
                 :earticle => {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties"
+                  :content => "Cache ORM instances to avoid database queries"
                 },
                 :array => [5]
               }, e.as_cache_json)
@@ -327,7 +327,7 @@ module Unit
                 :earticle => {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties"
+                  :content => "Cache ORM instances to avoid database queries"
                 },
                 :array => [4]
               }, @redis.get("unit.orm.test_data_mapper.earticle.1"))
@@ -339,7 +339,7 @@ module Unit
                   :earticle => {
                     :id => 1,
                     :title => "Behold! It's CachedRecord!",
-                    :content => "Cache ORM instances to avoid database querties"
+                    :content => "Cache ORM instances to avoid database queries"
                   },
                   :array => [3]
                 }.to_json
@@ -347,7 +347,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Earticle.cached(1).attributes)
               assert_equal(
                 true, Earticle.cached(1).instance_variables.include?(:@array)
@@ -369,7 +369,7 @@ module Unit
                   :farticle => {
                     :id => 1,
                     :title => "Behold! It's CachedRecord!",
-                    :content => "Cache ORM instances to avoid database querties"
+                    :content => "Cache ORM instances to avoid database queries"
                   },
                   :array => [3]
                 }.to_json
@@ -377,7 +377,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Farticle.cached(1).attributes)
               assert_equal(
                 true, Farticle.cached(1).instance_variables.include?(:@array)

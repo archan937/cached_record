@@ -105,7 +105,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :author_id => 1,
                 :foo_id => 2,
                 :published_at => Time.parse("2013-08-01 12:00:00"),
@@ -118,7 +118,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :author_id => 1,
                 :foo_id => 2,
                 :published_at => Time.parse("2013-08-01 12:00:00"),
@@ -132,7 +132,7 @@ module Unit
                 "unit.orm.test_active_record.article.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties",
+                  :content => "Cache ORM instances to avoid database queries",
                   :author_id => 1,
                   :foo_id => 2,
                   :published_at => Time.parse("2013-08-01 12:00:00"),
@@ -143,7 +143,7 @@ module Unit
               assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
-                "content" => "Cache ORM instances to avoid database querties",
+                "content" => "Cache ORM instances to avoid database queries",
                 "author_id" => 1,
                 "foo_id" => 2,
                 "published_at" => Time.parse("2013-08-01 12:00:00"),
@@ -161,7 +161,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, Barticle.find(1).as_cache_json)
             end
             it "can be stored in the cache store" do
@@ -169,7 +169,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties"
+                :content => "Cache ORM instances to avoid database queries"
               }, @memcached.get("unit.orm.test_active_record.barticle.1"))
             end
             it "can be fetched from the cache store" do
@@ -178,13 +178,13 @@ module Unit
                 "unit.orm.test_active_record.barticle.1", {
                   "id" => 1,
                   "title" => "Behold! It's CachedRecord!",
-                  "content" => "Cache ORM instances to avoid database querties"
+                  "content" => "Cache ORM instances to avoid database queries"
                 }.to_json
               )
               assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
-                "content" => "Cache ORM instances to avoid database querties",
+                "content" => "Cache ORM instances to avoid database queries",
                 "author_id" => nil,
                 "foo_id" => nil,
                 "published_at" => nil,
@@ -217,14 +217,14 @@ module Unit
                 "unit.orm.test_active_record.carticle.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties",
+                  :content => "Cache ORM instances to avoid database queries",
                   :@random_array => [3]
                 }.to_json
               )
               assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
-                "content" => "Cache ORM instances to avoid database querties",
+                "content" => "Cache ORM instances to avoid database queries",
                 "author_id" => nil,
                 "foo_id" => nil,
                 "published_at" => nil,
@@ -247,7 +247,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :@array => [5]
               }, d.as_cache_json)
             end
@@ -257,7 +257,7 @@ module Unit
               assert_equal_hashes({
                 :id => 1,
                 :title => "Behold! It's CachedRecord!",
-                :content => "Cache ORM instances to avoid database querties",
+                :content => "Cache ORM instances to avoid database queries",
                 :@array => [4]
               }, @memcached.get("unit.orm.test_active_record.darticle.1"))
             end
@@ -267,14 +267,14 @@ module Unit
                 "unit.orm.test_active_record.darticle.1", {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties",
+                  :content => "Cache ORM instances to avoid database queries",
                   :@array => [3]
                 }.to_json
               )
               assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
-                "content" => "Cache ORM instances to avoid database querties",
+                "content" => "Cache ORM instances to avoid database queries",
                 "author_id" => nil,
                 "foo_id" => nil,
                 "published_at" => nil,
@@ -298,7 +298,7 @@ module Unit
                 :earticle => {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties"
+                  :content => "Cache ORM instances to avoid database queries"
                 },
                 :array => [5]
               }, e.as_cache_json)
@@ -310,7 +310,7 @@ module Unit
                 :earticle => {
                   :id => 1,
                   :title => "Behold! It's CachedRecord!",
-                  :content => "Cache ORM instances to avoid database querties"
+                  :content => "Cache ORM instances to avoid database queries"
                 },
                 :array => [4]
               }, @memcached.get("unit.orm.test_active_record.earticle.1"))
@@ -322,7 +322,7 @@ module Unit
                   :earticle => {
                     :id => 1,
                     :title => "Behold! It's CachedRecord!",
-                    :content => "Cache ORM instances to avoid database querties"
+                    :content => "Cache ORM instances to avoid database queries"
                   },
                   :array => [3]
                 }.to_json
@@ -330,7 +330,7 @@ module Unit
               assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
-                "content" => "Cache ORM instances to avoid database querties",
+                "content" => "Cache ORM instances to avoid database queries",
                 "author_id" => nil,
                 "foo_id" => nil,
                 "published_at" => nil,
@@ -357,7 +357,7 @@ module Unit
                   :farticle => {
                     :id => 1,
                     :title => "Behold! It's CachedRecord!",
-                    :content => "Cache ORM instances to avoid database querties"
+                    :content => "Cache ORM instances to avoid database queries"
                   },
                   :array => [3]
                 }.to_json
@@ -365,7 +365,7 @@ module Unit
               assert_equal_hashes({
                 "id" => 1,
                 "title" => "Behold! It's CachedRecord!",
-                "content" => "Cache ORM instances to avoid database querties",
+                "content" => "Cache ORM instances to avoid database queries",
                 "author_id" => nil,
                 "foo_id" => nil,
                 "published_at" => nil,

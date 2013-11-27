@@ -14,7 +14,7 @@ CREATE TABLE `articles` (
   KEY `author_id` (`author_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `articles` VALUES (1,'Behold! It\'s CachedRecord!','Cache ORM instances to avoid database querties',1,2,'2013-08-01 12:00:00','2013-08-01 10:00:00','2013-08-01 11:00:00');
+INSERT INTO `articles` VALUES (1,'Behold! It\'s CachedRecord!','Cache ORM instances to avoid database queries',1,2,'2013-08-01 12:00:00','2013-08-01 10:00:00','2013-08-01 11:00:00');
 DROP TABLE IF EXISTS `articles_tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

@@ -1,6 +1,6 @@
 == CachedRecord {<img src="https://secure.travis-ci.org/archan937/cached_record.png"/>}[http://travis-ci.org/archan937/cached_record] {<img src="https://codeclimate.com/github/archan937/cached_record.png"/>}[https://codeclimate.com/github/archan937/cached_record]
 
-Cache ORM instances to avoid database querties.
+Cache ORM instances to avoid database queries.
 
 === Installation
 
