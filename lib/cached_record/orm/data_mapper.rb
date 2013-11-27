@@ -64,8 +64,7 @@ module CachedRecord
         def cache_foreign_keys
           (cache_json_options[:include] || {}).inject({}) do |json, name|
             relationship = relationships[name]
-            [value = send(name)].flatten.compact.each{|instance| Cache.set instance}
-            json.merge cache_foreign_key(name, relationship, value)
+            json.merge cache_foreign_key(name, relationship, send(name))
           end
         end
         def cache_foreign_key(name, relationship, value)
