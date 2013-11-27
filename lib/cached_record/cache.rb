@@ -54,6 +54,14 @@ module CachedRecord
       end
     end
 
+    def self.expire(instance)
+      klass = instance.class
+      cache_key = klass.cache_key instance.id
+      store(klass).delete cache_key
+      cache[store(klass).class].delete cache_key if klass.as_cache[:memoize]
+      nil
+    end
+
     def self.memoized(klass, id, epoch_time)
       return yield unless klass.as_cache[:memoize]
       cache_hash, cache_key = cache[store(klass).class], klass.cache_key(id)

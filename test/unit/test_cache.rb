@@ -218,6 +218,7 @@ module Unit
         describe ".set" do
           before do
             id = 123
+
             @klass = mock
             @klass.stubs(:cache_key).with(id).returns("mock.123")
 
@@ -249,8 +250,44 @@ module Unit
             end
           end
         end
+        describe ".expire" do
+          before do
+            id = 123
+
+            @klass = mock
+            @klass.stubs(:cache_key).with(id).returns("mock.123")
+
+            @instance = mock
+            @instance.stubs(:id).returns(id)
+            @instance.stubs(:class).returns(@klass)
+
+            @store = mock
+            CachedRecord::Cache.stubs(:store).returns(@store)
+          end
+          describe "without memoization" do
+            before do
+              @klass.stubs(:as_cache).returns({:store => :redis})
+            end
+            it "deletes key from cache store" do
+              @store.expects(:delete).with("mock.123")
+              CachedRecord::Cache.expire @instance
+            end
+          end
+          describe "with memoization" do
+            before do
+              @klass.stubs(:as_cache).returns({:store => :redis, :memoize => true})
+            end
+            it "deletes key from cache store and memoized cache" do
+              hash = mock
+              hash.expects(:delete).with("mock.123")
+              @store.expects(:delete).with("mock.123")
+              CachedRecord::Cache.expects(:cache).returns @store.class => hash
+              CachedRecord::Cache.expire @instance
+            end
+          end
+        end
         describe ".memoized" do
-          describe "not configured for memoization" do
+          describe "without memoization" do
             it "returns nil" do
               klass = mock
               klass.expects(:as_cache).returns({})
@@ -260,7 +297,7 @@ module Unit
               assert_equal instance, CachedRecord::Cache.memoized(klass, 123, 123456789) { instance }
             end
           end
-          describe "configured for memoization" do
+          describe "with memoization" do
             before do
               @klass = mock
               @klass.stubs(:as_cache).returns({:store => :redis, :memoize => true})

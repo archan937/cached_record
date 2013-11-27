@@ -1,3 +1,4 @@
+require "gem_ext/redis"
 require "cached_record/version"
 require "cached_record/cache"
 require "cached_record/orm"
