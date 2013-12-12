@@ -22,11 +22,313 @@ Make sure you have the correct database config in +database.yml+ and run:
 
 === Usage
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+==== Set up CachedRecord
+
+At startup, you need to invoke <tt>CachedRecord.setup</tt>. This method does the following:
+
+* it preps <tt>ActiveRecord::Base</tt> and/or <tt>DataMapper::Resource</tt> (only when defined)
+* it registers the available cache stores (Redis and/or Memcached)
+
+In a Rails application, you can add a Ruby source file (e.g. <tt>cached_record.rb</tt>) within <tt>config/initializers</tt> for instance.
+
+You can specify the available cache stores by passing either a Symbol (<tt>:redis</tt> and/or <tt>:memcached</tt> with default localhost settings) or a key / value pair (with custom server settings):
+
+When using Redis at localhost:
+
+  CachedRecord.setup :redis
+
+When using Redis at localhost and Memcached at another server:
+
+  CachedRecord.setup :redis, :memcached => {:host => "123.45.67.8", :port => 90}
+
+==== Specify cache structure and strategy
+
+A record will not automatically be cached in a cache store. You have to make a choice whether to only serialize objects within the cache store or whether you want also memoize objects (which is much more performant but at the cost of extra memory usage).
+
+Also, you can specify which attributes, associations and/or instance variables need to be cached.
+
+===== Cache strategy
+
+As already mentioned, you will have to choose whether you only want to serialize objects within the cache store or whether you also want to memoize them.
+
+====== Serializing objects
+
+To only serialize objects within the cache store, use the class method <tt>as_cache</tt>:
+
+  class Article < ActiveRecord::Base
+    as_cache :only => [:title]
+  end
+
+When using <tt>DataMapper</tt>:
+
+  class Article
+    include DataMapper::Resource
+    property :id, Serial, :key => true
+    property :title, String
+    as_cache :only => [:title]
+  end
+
+Please note that the <tt>id</tt> of a record will always be cached and that in previous examples both the <tt>id</tt> and <tt>title</tt> attributes will be cached.
+
+When trying this out in the console (please note when the query hits occur):
+
+  [1] pry(main)> ActiveRecord::Base.logger = Logger.new STDOUT; nil
+  => nil
+  [2] pry(main)> a = Article.first
+  D, [2013-12-12T22:59:52.223555 #23583] DEBUG -- :   Article Load (0.3ms)  SELECT `articles`.* FROM `articles` ORDER BY `articles`.`id` ASC LIMIT 1
+  => #<Article id: 1, title: "Behold! It's CachedRecord!", content: "Cache ORM instances to avoid database queries", author_id: 1, foo_id: 2, published_at: "2013-08-01 12:00:00", created_at: "2013-08-01 10:00:00", updated_at: "2013-08-01 11:00:00">
+  [3] pry(main)> a.as_cache_json
+  => {:id=>1, :title=>"Behold! It's CachedRecord!"}
+  [4] pry(main)> a.to_cache_json
+  => "{\"id\":1,\"title\":\"Behold! It's CachedRecord!\"}"
+  [5] pry(main)> Article.cached(1)
+  D, [2013-12-12T22:59:59.656254 #23583] DEBUG -- :   Article Load (0.3ms)  SELECT `articles`.* FROM `articles` WHERE `articles`.`id` = 1 LIMIT 1
+  => #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: nil, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>
+  [6] pry(main)> Article.cached(1).object_id == Article.cached(1).object_id
+  => false
+  [7] pry(main)> Article.cached(1).title
+  => "Behold! It's CachedRecord!"
+  [8] pry(main)> Redis.new.get "article.1"
+  => "{\"id\":1,\"title\":\"Behold! It's CachedRecord!\"}"
+  [9] pry(main)> Article.first.title
+  D, [2013-12-12T23:00:04.159257 #23583] DEBUG -- :   Article Load (0.3ms)  SELECT `articles`.* FROM `articles` ORDER BY `articles`.`id` ASC LIMIT 1
+  => "Behold! It's CachedRecord!"
+
+I will only continue with <tt>ActiveRecord::Base</tt> instances within examples as using <tt>DataMapper</tt> is quite similar.
+
+====== Serializing and memoizing objects
+
+For better performance at the cost of extra memory usage, use the class method <tt>as_memoized_cache</tt>:
+
+  class Article < ActiveRecord::Base
+    as_memoized_cache :only => [:title]
+  end
+
+When trying this out in the console:
+
+  [1] pry(main)> ActiveRecord::Base.logger = Logger.new STDOUT; nil
+  => nil
+  [2] pry(main)> a = Article.first
+  D, [2013-12-12T23:01:29.387239 #23763] DEBUG -- :   Article Load (0.3ms)  SELECT `articles`.* FROM `articles` ORDER BY `articles`.`id` ASC LIMIT 1
+  => #<Article id: 1, title: "Behold! It's CachedRecord!", content: "Cache ORM instances to avoid database queries", author_id: 1, foo_id: 2, published_at: "2013-08-01 12:00:00", created_at: "2013-08-01 10:00:00", updated_at: "2013-08-01 11:00:00">
+  [3] pry(main)> a.as_cache_json
+  => {:id=>1, :title=>"Behold! It's CachedRecord!"}
+  [4] pry(main)> a.to_cache_json
+  => "{\"id\":1,\"title\":\"Behold! It's CachedRecord!\"}"
+  [5] pry(main)> Article.cached(1)
+  D, [2013-12-12T23:01:36.061953 #23763] DEBUG -- :   Article Load (0.3ms)  SELECT `articles`.* FROM `articles` WHERE `articles`.`id` = 1 LIMIT 1
+  => #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: nil, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>
+  [6] pry(main)> Article.cached(1).object_id == Article.cached(1).object_id
+  => true
+  [7] pry(main)> Article.cached(1).title
+  => "Behold! It's CachedRecord!"
+  [8] pry(main)> Redis.new.get "article.1"
+  => "{\"id\":1,\"title\":\"Behold! It's CachedRecord!\"}@1386885696"
+  [9] pry(main)> Article.first.title
+  D, [2013-12-12T23:01:40.556263 #23763] DEBUG -- :   Article Load (0.4ms)  SELECT `articles`.* FROM `articles` ORDER BY `articles`.`id` ASC LIMIT 1
+  => "Behold! It's CachedRecord!"
+  [10] pry(main)> CachedRecord::Cache.send :cache
+  => {Dalli::Client=>{},
+   Redis=>
+    {"article.1"=>
+      {:instance=>
+        #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: nil, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>,
+       :epoch_time=>1386885696}}}
+
+===== Cache store
+
+When having specified more than one cache store with <tt>CachedRecord.setup</tt>, you will have to pass which cache store you want to use for a specific record class.
+
+Either pass <tt>:memcached</tt> or <tt>:redis</tt> as follows:
+
+  class Article < ActiveRecord::Base
+    as_memoized_cache :memcached, :only => [:title]
+  end
+
+When having specified only one cache store, you can leave it out:
+
+  CachedRecord.setup :redis
+
+  class Article < ActiveRecord::Base
+    as_memoized_cache :only => [:title]
+  end
+
+This serializes Article records within the Redis server.
+
+===== Attributes
+
+You have control over which attributes have to be serialized. Pass the <tt>:only</tt> option. When you don't pass the option, all attributes will be included.
+
+  class Article < ActiveRecord::Base
+    as_cache
+  end
+
+  [1] pry(main)> Article.first.as_cache_json
+  => {:id=>1,
+   :title=>"Behold! It's CachedRecord!",
+   :content=>"Cache ORM instances to avoid database queries",
+   :published_at=>2013-08-01 12:00:00 +0200,
+   :created_at=>2013-08-01 10:00:00 +0200,
+   :updated_at=>2013-08-01 11:00:00 +0200}
+
+===== Associations
+
+You can include associations by passing the <tt>:include</tt> option. When using the setup of <tt>script/console</tt>:
+
+  [1] pry(main)> ActiveRecord::Base.logger = Logger.new STDOUT; nil
+  => nil
+  [2] pry(main)> Article.cached(1).as_cache_json
+  D, [2013-12-12T23:54:54.729034 #25722] DEBUG -- :   Article Load (0.4ms)  SELECT `articles`.* FROM `articles` WHERE `articles`.`id` = 1 LIMIT 1
+  D, [2013-12-12T23:54:54.746719 #25722] DEBUG -- :   User Load (0.3ms)  SELECT `users`.* FROM `users` WHERE `users`.`id` = 1 ORDER BY `users`.`id` ASC LIMIT 1
+  D, [2013-12-12T23:54:54.787599 #25722] DEBUG -- :   Comment Load (0.4ms)  SELECT `comments`.* FROM `comments` WHERE `comments`.`article_id` = 1
+  D, [2013-12-12T23:54:54.803960 #25722] DEBUG -- :   Tag Load (0.4ms)  SELECT `tags`.* FROM `tags` INNER JOIN `articles_tags` ON `tags`.`id` = `articles_tags`.`tag_id` WHERE `articles_tags`.`article_id` = 1
+  D, [2013-12-12T23:54:54.811653 #25722] DEBUG -- :   User Load (0.3ms)  SELECT `users`.* FROM `users` WHERE `users`.`id` = 1 LIMIT 1
+  D, [2013-12-12T23:54:54.814919 #25722] DEBUG -- :   Article Load (0.4ms)  SELECT `articles`.* FROM `articles` WHERE `articles`.`foo_id` = 1 ORDER BY `articles`.`id` ASC LIMIT 1
+  D, [2013-12-12T23:54:54.817261 #25722] DEBUG -- :   Comment Load (0.3ms)  SELECT `comments`.* FROM `comments` WHERE `comments`.`id` = 1 LIMIT 1
+  D, [2013-12-12T23:54:54.818860 #25722] DEBUG -- :   User Load (0.2ms)  SELECT `users`.* FROM `users` WHERE `users`.`id` = 2 ORDER BY `users`.`id` ASC LIMIT 1
+  D, [2013-12-12T23:54:54.820553 #25722] DEBUG -- :   User Load (0.2ms)  SELECT `users`.* FROM `users` WHERE `users`.`id` = 2 LIMIT 1
+  D, [2013-12-12T23:54:54.821601 #25722] DEBUG -- :   Article Load (0.2ms)  SELECT `articles`.* FROM `articles` WHERE `articles`.`foo_id` = 2 ORDER BY `articles`.`id` ASC LIMIT 1
+  D, [2013-12-12T23:54:54.823996 #25722] DEBUG -- :   Comment Load (0.4ms)  SELECT `comments`.* FROM `comments` WHERE `comments`.`id` = 2 LIMIT 1
+  D, [2013-12-12T23:54:54.825475 #25722] DEBUG -- :   User Load (0.3ms)  SELECT `users`.* FROM `users` WHERE `users`.`id` = 1 ORDER BY `users`.`id` ASC LIMIT 1
+  D, [2013-12-12T23:54:54.828590 #25722] DEBUG -- :   Tag Load (0.2ms)  SELECT `tags`.* FROM `tags` WHERE `tags`.`id` = 1 LIMIT 1
+  D, [2013-12-12T23:54:54.830137 #25722] DEBUG -- :   Tag Load (0.2ms)  SELECT `tags`.* FROM `tags` WHERE `tags`.`id` = 2 LIMIT 1
+  => {:id=>1,
+   :title=>"Behold! It's CachedRecord!",
+   :author_id=>1,
+   :_comment_ids=>[1, 2],
+   :_tag_ids=>[1, 2]}
+  [3] pry(main)> Article.cached(1).as_cache_json
+  => {:id=>1,
+   :title=>"Behold! It's CachedRecord!",
+   :author_id=>1,
+   :_comment_ids=>[1, 2],
+   :_tag_ids=>[1, 2]}
+  [4] pry(main)> Article.cached(1).author
+  => #<User id: 1, name: "Paul Engel", description: nil, active: nil, created_at: nil, updated_at: nil>
+  [5] pry(main)> a = Article.cached(1)
+  => #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: 1, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>
+  [6] pry(main)> a.author.object_id == a.comments[1].poster.object_id
+  => true
+
+===== Instance variables
+
+Finally, you can cache instance variables. Pass the <tt>:memoize</tt> option. This can be a Symbol or a Hash.
+
+When passing a Symbol, CachedRecord expects that a method with that name is defined and that it memoizes an instance variable with the same name (prefixed with a <tt>@</tt>):
+
+  class Article < ActiveRecord::Base
+    as_cache :memcached, :only => [], :memoize => [:random_array]
+    def random_array
+      @random_array ||= [rand(10)]
+    end
+  end
+
+  [1] pry(main)> Article.cached(1).random_array
+  => [2]
+  [2] pry(main)> Article.cached(1).random_array
+  => [2]
+  [3] pry(main)> Article.first.random_array
+  => [4]
+  [4] pry(main)> Article.first.random_array
+  => [0]
+  [5] pry(main)> Article.cached(1).random_array
+  => [2]
+  [6] pry(main)> Article.cached(1).random_array
+  => [2]
+  [7] pry(main)> Dalli::Client.new.get "article.1"
+  => "{\"id\":1,\"@random_array\":[2]}"
+
+You should pass a Hash when the name of the method differs from the name of the corresponding instance variable:
+
+  class Article < ActiveRecord::Base
+    as_cache :memcached, :only => [], :memoize => [:random_array]
+    def random_array
+      @rarray ||= [rand(10)]
+    end
+  end
+
+  [1] pry(main)> Article.cached(1).random_array
+  => [5]
+  [2] pry(main)> Article.cached(1).random_array
+  => [5]
+  [3] pry(main)> Article.first.random_array
+  => [9]
+  [4] pry(main)> Article.first.random_array
+  => [7]
+  [5] pry(main)> Article.cached(1).random_array
+  => [5]
+  [6] pry(main)> Article.cached(1).random_array
+  => [5]
+  [7] pry(main)> Dalli::Client.new.get "article.1"
+  => "{\"id\":1,\"@rarray\":[5]}"
+
+===== Include root
+
+Like in Rails, you can pass <tt>:include_root</tt> when parsing a record to JSON. It wraps the resulting hash with an extra key (the class name underscored).
+
+You can also do this with <tt>CachedRecord</tt>:
+
+  class Article < ActiveRecord::Base
+    as_cache :only => [:title], :include_root => true
+  end
+
+When trying this out in the console:
+
+  [1] pry(main)> Article.first.as_cache_json
+  => {:article=>{:id=>1, :title=>"Behold! It's CachedRecord!"}}
+
+Namespaces are ignored at default:
+
+  module Blog
+    class Article < ActiveRecord::Base
+      as_cache :only => [:title], :include_root => true
+    end
+  end
+
+  [1] pry(main)> Blog::Article.first.as_cache_json
+  => {:article=>{:id=>1, :title=>"Behold! It's CachedRecord!"}}
+
+You can override this behaviour by overriding the `cache_root` class method:
+
+  module Blog
+    class Article < ActiveRecord::Base
+      as_cache :only => [:title], :include_root => true
+      def self.cache_root
+        :"#{name.underscore.gsub("/", ".")}"
+      end
+    end
+  end
+
+  [1] pry(main)> Blog::Article.first.as_cache_json
+  => {:"blog.article"=>{:id=>1, :title=>"Behold! It's CachedRecord!"}}
+
+== Using the console
+
+As you probably already noticed, the <tt>CachedRecord</tt> repo is provided with a <tt>script/console</tt> command which you can use for development / testing purposes. Please note that you have to run a Redis server locally.
+
+Run the following command in your console:
+
+  $ script/console
+  Loading CachedRecord development environment (0.1.0)
+  [1] pry(main)> a = Article.cached(1)
+  => #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: 1, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>
+  [2] pry(main)> a.object_id == Article.cached(1).object_id
+  => true
+
+== Testing
+
+Run the following command for testing:
+
+  $ rake
+
+You can also run a single test file:
+
+  $ ruby test/unit/test_cached_record.rb
+
+Please note that you have to run both a Redis server and a Memcached server locally.
 
 === TODO
 
-* Write documentation
 * Improve cache expiration (expiration period, memoized instances, references)
 
 === License
