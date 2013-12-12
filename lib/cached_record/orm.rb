@@ -22,7 +22,7 @@ module CachedRecord
             :as_json => as_json
           }.reject{|key, value| value.nil?}
         end
-        @as_cache ||= {}
+        @as_cache ||= {:as_json => {}}
       end
 
       def as_memoized_cache(*args)
@@ -40,7 +40,6 @@ module CachedRecord
       end
 
       def cached(id)
-        return nil if as_cache.empty?
         Cache.get(self, id) do
           uncached id
         end
