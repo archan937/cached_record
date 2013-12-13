@@ -122,6 +122,14 @@ module Unit
         belongs_to :tag, :model => "Unit::ORM::TestDataMapper::Tag"
       end
 
+      class Harticle
+        include DataMapper::Resource
+        storage_names[:default] = "articles"
+        property :id, Serial, :key => true
+        property :title, String
+        as_memoized_cache :redis, :only => [:title], :expire => 2.seconds
+      end
+
       DataMapper.finalize
 
       describe CachedRecord::ORM::DataMapper do
@@ -521,6 +529,19 @@ module Unit
                 :name => "Paul Engel"
               }], g.comments.collect{|x| x.poster.attributes})
               assert_equal g.author.object_id, g.comments[1].poster.object_id
+            end
+          end
+
+          describe "Harticle" do
+            it "expires after 2 seconds" do
+              object_id = Harticle.cached(1).object_id
+              assert_equal object_id, Harticle.cached(1).object_id
+              assert_equal object_id, Harticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Harticle.cached(1).object_id
+              assert_equal object_id, Harticle.cached(1).object_id
+              sleep 1.5
+              assert_equal false, object_id == Harticle.cached(1).object_id
             end
           end
         end

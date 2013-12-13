@@ -17,7 +17,7 @@ class Article < ActiveRecord::Base
   belongs_to :author, :class_name => "User"
   has_many :comments
   has_and_belongs_to_many :tags
-  as_memoized_cache :only => [:title], :include => [:author, :comments, :tags]
+  as_memoized_cache :only => [:title], :include => [:author, :comments, :tags], :expire => 20.seconds
 end
 
 class User < ActiveRecord::Base

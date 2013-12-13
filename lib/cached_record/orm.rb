@@ -14,12 +14,14 @@ module CachedRecord
       def as_cache(*args)
         if args.any?
           store = args.first if args.first.is_a? Symbol
+          expire = args.last.delete(:expire) if args.last.is_a? Hash
           as_json = parse_as_cache_json_options!(
             args.inject({}){|h, arg| arg.is_a?(Hash) ? h.merge(arg) : h}
           )
           @as_cache = {
             :store => store,
-            :as_json => as_json
+            :as_json => as_json,
+            :expire => expire
           }.reject{|key, value| value.nil?}
         end
         @as_cache ||= {:as_json => {}}

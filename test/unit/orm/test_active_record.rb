@@ -73,6 +73,11 @@ module Unit
         as_memoized_cache :memcached, :only => [:name]
       end
 
+      class Harticle < ActiveRecord::Base
+        self.table_name = "articles"
+        as_memoized_cache :memcached, :only => [:title], :expire => 2.seconds
+      end
+
       describe CachedRecord::ORM::ActiveRecord do
         describe "when ActiveRecord is not defined" do
           it "knows not to setup ActiveRecord::Base" do
@@ -539,6 +544,19 @@ module Unit
                 "updated_at" => nil
               }], g.comments.collect{|x| x.poster.attributes})
               assert_equal g.author.object_id, g.comments[1].poster.object_id
+            end
+          end
+
+          describe "Harticle" do
+            it "expires after 2 seconds" do
+              object_id = Harticle.cached(1).object_id
+              assert_equal object_id, Harticle.cached(1).object_id
+              assert_equal object_id, Harticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Harticle.cached(1).object_id
+              assert_equal object_id, Harticle.cached(1).object_id
+              sleep 1.5
+              assert_equal false, object_id == Harticle.cached(1).object_id
             end
           end
         end

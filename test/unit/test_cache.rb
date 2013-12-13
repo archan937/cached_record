@@ -235,7 +235,7 @@ module Unit
               @klass.stubs(:as_cache).returns({})
             end
             it "stores cache JSON" do
-              @store.expects(:set).with("mock.123", '{"id":123}')
+              @store.expects(:set).with("mock.123", '{"id":123}', nil)
               CachedRecord::Cache.set @instance
             end
           end
@@ -245,7 +245,7 @@ module Unit
             end
             it "stores cache JSON" do
               Time.any_instance.expects(:to_i).returns(123456789)
-              @store.expects(:set).with("mock.123", '{"id":123}@123456789')
+              @store.expects(:set).with("mock.123", '{"id":123}@123456789', nil)
               CachedRecord::Cache.set @instance
             end
           end

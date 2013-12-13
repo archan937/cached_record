@@ -302,6 +302,20 @@ You can override this behaviour by overriding the `cache_root` class method:
   [1] pry(main)> Blog::Article.first.as_cache_json
   => {:"blog.article"=>{:id=>1, :title=>"Behold! It's CachedRecord!"}}
 
+===== Expiration
+
+You can specify the TTL (Time To Live) of a record by passing the <tt>:expire</tt> option:
+
+  class Article < ActiveRecord::Base
+    as_memoized_cache :redis, :only => [:title], :expire => 5.seconds
+  end
+
+  [1] pry(main)> puts Article.cached(1).object_id; sleep 4; puts Article.cached(1).object_id; sleep 2; puts Article.cached(1).object_id
+  70311156481000
+  70311156481000
+  70311131970100
+  => nil
+
 == Using the console
 
 As you probably already noticed, the <tt>CachedRecord</tt> repo is provided with a <tt>script/console</tt> command which you can use for development / testing purposes. Please note that you have to run a Redis server locally.

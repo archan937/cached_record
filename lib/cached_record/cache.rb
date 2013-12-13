@@ -50,7 +50,7 @@ module CachedRecord
 
     def self.set(instance)
       "#{instance.to_cache_json}#{"@#{Time.now.to_i}" if instance.class.as_cache[:memoize]}".tap do |cache_string|
-        store(instance.class).set instance.class.cache_key(instance.id), cache_string
+        store(instance.class).set instance.class.cache_key(instance.id), cache_string, instance.class.as_cache[:expire]
       end
     end
 
