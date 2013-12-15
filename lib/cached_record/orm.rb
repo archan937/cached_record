@@ -12,18 +12,7 @@ module CachedRecord
     module ClassMethods
 
       def as_cache(*args)
-        if args.any?
-          store = args.first if args.first.is_a? Symbol
-          expire = args.last.delete(:expire) if args.last.is_a? Hash
-          as_json = parse_as_cache_json_options!(
-            args.inject({}){|h, arg| arg.is_a?(Hash) ? h.merge(arg) : h}
-          )
-          @as_cache = {
-            :store => store,
-            :as_json => as_json,
-            :expire => expire
-          }.reject{|key, value| value.nil?}
-        end
+        @as_cache = parse_as_cache_options args if args.any?
         @as_cache ||= {:as_json => {}}
       end
 
@@ -81,10 +70,30 @@ module CachedRecord
         raise NotImplementedError, "Cannot set cached association for `#{self}` instances"
       end
 
-      def parse_as_cache_json_options!(options)
-        options = options.symbolize_keys
+      def parse_as_cache_options(args)
+        if (symbol = args.first).is_a? Symbol
+          store = symbol
+        end
+        if (hash = args.last).is_a? Hash
+          expire = hash.delete :expire
+          as_json = parse_as_cache_json_options hash
+        end
+        {
+          :store => store,
+          :expire => expire,
+          :as_json => as_json || {}
+        }.reject{|key, value| value.nil?}
+      end
+
+      def parse_as_cache_json_options(options)
+        options.symbolize_keys!
         validate_as_cache_json_options options
-        parse_as_cache_json_options options
+        {}.tap do |opts|
+          opts[:only] = symbolize_array(options[:only]) if options[:only]
+          opts[:include] = symbolize_array(options[:include]) if options[:include]
+          opts[:memoize] = parse_memoize_options(options[:memoize]) if options[:memoize]
+          opts[:include_root] = true if options[:include_root]
+        end
       end
 
       def validate_as_cache_json_options(options)
@@ -97,15 +106,6 @@ module CachedRecord
         end
         if options.include?(:include_root) && ![true, false].include?(options[:include_root])
           raise ArgumentError
-        end
-      end
-
-      def parse_as_cache_json_options(options)
-        {}.tap do |opts|
-          opts[:only] = symbolize_array(options[:only]) if options[:only]
-          opts[:include] = symbolize_array(options[:include]) if options[:include]
-          opts[:memoize] = parse_memoize_options(options[:memoize]) if options[:memoize]
-          opts[:include_root] = true if options[:include_root]
         end
       end
 
