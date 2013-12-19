@@ -17,8 +17,10 @@ module CachedRecord
       end
 
       def as_memoized_cache(*args)
+        retain = args.last.delete(:retain) if args.last.is_a?(Hash)
         as_cache(*args).tap do |options|
           options[:memoize] = true
+          options[:retain] = retain if retain
         end
       end
 

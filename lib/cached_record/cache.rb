@@ -38,13 +38,15 @@ module CachedRecord
     end
 
     def self.get(klass, id)
-      cache_string = store(klass).get(klass.cache_key(id)) || begin
-        return unless (instance = yield if block_given?)
-        set instance
-      end
-      json, epoch_time = split_cache_string(cache_string)
-      memoized(klass, id, epoch_time) do
-        klass.load_cache_json JSON.parse(json)
+      retained(klass, id) || begin
+        cache_string = store(klass).get(klass.cache_key(id)) || begin
+          return unless (instance = yield if block_given?)
+          set instance
+        end
+        json, epoch_time = split_cache_string(cache_string)
+        memoized(klass, id, epoch_time) do
+          klass.load_cache_json JSON.parse(json)
+        end
       end
     end
 
@@ -62,15 +64,26 @@ module CachedRecord
       nil
     end
 
+    def self.retained(klass, id)
+      return unless klass.as_cache[:memoize] && klass.as_cache[:retain]
+      cache_hash, cache_key = cache[store(klass).class], klass.cache_key(id)
+
+      if (cache_entry = cache_hash[cache_key]) && (Time.now.to_i < cache_entry[:cache_hit])
+        cache_entry[:instance]
+      end
+    end
+
     def self.memoized(klass, id, epoch_time)
       return yield unless klass.as_cache[:memoize]
       cache_hash, cache_key = cache[store(klass).class], klass.cache_key(id)
+      cache_hit = klass.as_cache[:retain] ? {:cache_hit => (Time.now + klass.as_cache[:retain]).to_i} : {}
 
       if (cache_entry = cache_hash[cache_key]) && (epoch_time == cache_entry[:epoch_time])
+        cache_entry.merge! cache_hit
         cache_entry[:instance]
       else
         yield.tap do |instance|
-          cache_hash[cache_key] = {:instance => instance, :epoch_time => epoch_time} if instance
+          cache_hash[cache_key] = {:instance => instance, :epoch_time => epoch_time}.merge(cache_hit) if instance
         end
       end
     end

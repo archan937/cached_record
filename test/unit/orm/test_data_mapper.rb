@@ -130,6 +130,14 @@ module Unit
         as_memoized_cache :redis, :only => [:title], :expire => 2.seconds
       end
 
+      class Jarticle
+        include DataMapper::Resource
+        storage_names[:default] = "articles"
+        property :id, Serial, :key => true
+        property :title, String
+        as_memoized_cache :redis, :only => [:title], :retain => 4.seconds
+      end
+
       DataMapper.finalize
 
       describe CachedRecord::ORM::DataMapper do
@@ -533,6 +541,14 @@ module Unit
           end
 
           describe "Harticle" do
+            it "has the expected as cache options" do
+              assert_equal_hashes({
+                :store => :redis,
+                :expire => 2.seconds,
+                :as_json => {:only => [:title]},
+                :memoize => true
+              }, Harticle.as_cache)
+            end
             it "expires after 2 seconds" do
               object_id = Harticle.cached(1).object_id
               assert_equal object_id, Harticle.cached(1).object_id
@@ -542,6 +558,54 @@ module Unit
               assert_equal object_id, Harticle.cached(1).object_id
               sleep 1.5
               assert_equal false, object_id == Harticle.cached(1).object_id
+            end
+          end
+
+          describe "Jarticle" do
+            it "has the expected as cache options" do
+              assert_equal_hashes({
+                :store => :redis,
+                :as_json => {:only => [:title]},
+                :memoize => true,
+                :retain => 4.seconds
+              }, Jarticle.as_cache)
+            end
+            it "does not hit the cache for 4 seconds" do
+              object_id = Jarticle.cached(1).object_id
+              cached = CachedRecord::Cache.send(:stores)[:redis].get Jarticle.cache_key(1)
+
+              CachedRecord::Cache.send(:stores)[:redis].expects(:get).never
+              assert_equal object_id, Jarticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+
+              CachedRecord::Cache.send(:stores)[:redis].expects(:get).returns(cached)
+              sleep 1.5
+              assert_equal object_id, Jarticle.cached(1).object_id
+
+              CachedRecord::Cache.send(:stores)[:redis].expects(:get).never
+              assert_equal object_id, Jarticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+
+              CachedRecord::Cache.send(:stores)[:redis].expects(:get).returns(cached)
+              sleep 1
+              assert_equal object_id, Jarticle.cached(1).object_id
+
+              CachedRecord::Cache.send(:stores)[:redis].expects(:get).never
+              assert_equal object_id, Jarticle.cached(1).object_id
+
+              CachedRecord::Cache.expire Jarticle.cached(1)
+              CachedRecord::Cache.send(:stores)[:redis].expects(:get).returns(cached)
+              assert_equal false, object_id == Jarticle.cached(1).object_id
             end
           end
         end
