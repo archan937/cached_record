@@ -1,5 +1,6 @@
 require "bundler"
 Bundler.require :default, :development
+
 require "active_record"
 
 dbconfig = YAML.load_file(File.expand_path("../../config/database.yml", __FILE__))["development"]

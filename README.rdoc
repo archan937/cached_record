@@ -316,6 +316,16 @@ You can specify the TTL (Time To Live) of a record by passing the <tt>:expire</t
   70311131970100
   => nil
 
+===== Retaining
+
+You can retain memoized instances for a specific period of time. This reduces cache store hits and thus is more performant.
+
+  class Article < ActiveRecord::Base
+    as_memoized_cache :redis, :only => [:title], :retain => 5.seconds
+  end
+
+In this case, memoized <tt>Article</tt> instances are retained for at least 5 seconds.
+
 == Using the console
 
 As you probably already noticed, the <tt>CachedRecord</tt> repo is provided with a <tt>script/console</tt> command which you can use for development / testing purposes. Please note that you have to run a Redis server locally.
@@ -328,6 +338,29 @@ Run the following command in your console:
   => #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: 1, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>
   [2] pry(main)> a.object_id == Article.cached(1).object_id
   => true
+
+== Benchmarking
+
+The <tt>CachedRecord</tt> repo is provided with several benchmarks. You can run them using <tt>rake benchmark</tt>.
+
+  ruby-2.0.0 paulengel:cached_record (master) $ rake benchmark
+  Benchmarking uncached instances (5000 times)
+  -> [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100.0% in 27.92s
+  Benchmarking cached instances (5000 times)
+  -> [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100.0% in 25.66s
+  Benchmarking memoized instances (5000 times)
+  -> [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100.0% in 1.52s
+  Benchmarking retained instances (5000 times)
+  -> [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100.0% in 0.41s
+  Benchmarking memoized instances (150000 times)
+  -> [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100.0% in 39.40s
+  Benchmarking retained instances (150000 times)
+  -> [++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++] 100.0% in 7.75s
+  Done.
+
+As expected, <b>retaining instances is the fastest cache strategy</b> at the cost of extra memory usage and having stale instances (in this case for 10 seconds).
+
+Be sure to have a Redis server running locally when running the Rake task.
 
 == Testing
 
