@@ -241,7 +241,7 @@ When passing a Symbol, CachedRecord expects that a method with that name is defi
 You should pass a Hash when the name of the method differs from the name of the corresponding instance variable:
 
   class Article < ActiveRecord::Base
-    as_cache :memcached, :only => [], :memoize => [:random_array]
+    as_cache :memcached, :only => [], :memoize => {:random_array => :@rarray}
     def random_array
       @rarray ||= [rand(10)]
     end
