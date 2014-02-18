@@ -170,10 +170,11 @@ module Unit
         end
 
         describe "#cache" do
-          it "delegates to CachedRecord::Cache.set" do
-            instance = A.new
-            CachedRecord::Cache.expects(:set).with(instance)
-            instance.cache
+          it "delegates to class.cached" do
+            id, instance = 2, A.new
+            instance.expects(:id).returns(id)
+            A.expects(:cached).with(id)
+            assert instance.cache
           end
         end
 
@@ -181,7 +182,7 @@ module Unit
           it "delegates to CachedRecord::Cache.expire" do
             instance = A.new
             CachedRecord::Cache.expects(:expire).with(instance)
-            instance.expire
+            assert instance.expire
           end
         end
 

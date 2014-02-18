@@ -167,11 +167,13 @@ module CachedRecord
       end
 
       def cache
-        Cache.set self
+        self.class.cached id
+        true
       end
 
       def expire
         Cache.expire self
+        true
       end
 
     private
