@@ -2,7 +2,7 @@ require File.expand_path("../../../test_helper", __FILE__)
 
 module Unit
   module ORM
-    class TestDataMapper < MiniTest::Unit::TestCase
+    class TestDataMapper < MiniTest::Test
 
       class Article
         include DataMapper::Resource

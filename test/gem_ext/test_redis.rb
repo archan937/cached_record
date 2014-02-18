@@ -1,7 +1,7 @@
 require File.expand_path("../../test_helper", __FILE__)
 
 module GemExt
-  class TestRedis < MiniTest::Unit::TestCase
+  class TestRedis < MiniTest::Test
 
     describe Redis do
       describe "#set" do

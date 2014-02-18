@@ -1,7 +1,7 @@
 require File.expand_path("../../test_helper", __FILE__)
 
 module Unit
-  class TestCache < MiniTest::Unit::TestCase
+  class TestCache < MiniTest::Test
 
     describe CachedRecord::Cache do
       after do

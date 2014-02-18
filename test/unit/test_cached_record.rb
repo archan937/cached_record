@@ -1,7 +1,7 @@
 require File.expand_path("../../test_helper", __FILE__)
 
 module Unit
-  class TestCachedRecord < MiniTest::Unit::TestCase
+  class TestCachedRecord < MiniTest::Test
 
     describe CachedRecord do
       it "has the current version" do

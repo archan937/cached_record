@@ -1,4 +1,4 @@
-class MiniTest::Unit::TestCase
+class MiniTest::Test
   def teardown
     Redis.new.flushdb
     Dalli::Client.new.flush

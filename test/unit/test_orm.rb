@@ -1,7 +1,7 @@
 require File.expand_path("../../test_helper", __FILE__)
 
 module Unit
-  class TestORM < MiniTest::Unit::TestCase
+  class TestORM < MiniTest::Test
 
     class A
       include CachedRecord::ORM

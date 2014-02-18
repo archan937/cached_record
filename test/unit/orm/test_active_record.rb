@@ -2,7 +2,7 @@ require File.expand_path("../../../test_helper", __FILE__)
 
 module Unit
   module ORM
-    class TestActiveRecord < MiniTest::Unit::TestCase
+    class TestActiveRecord < MiniTest::Test
 
       class Article < ActiveRecord::Base
         as_cache :memcached
