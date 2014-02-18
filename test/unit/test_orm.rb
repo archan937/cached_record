@@ -169,6 +169,22 @@ module Unit
           end
         end
 
+        describe "#cache" do
+          it "delegates to CachedRecord::Cache.set" do
+            instance = A.new
+            CachedRecord::Cache.expects(:set).with(instance)
+            instance.cache
+          end
+        end
+
+        describe "#expire" do
+          it "delegates to CachedRecord::Cache.expire" do
+            instance = A.new
+            CachedRecord::Cache.expects(:expire).with(instance)
+            instance.expire
+          end
+        end
+
       end
     end
 

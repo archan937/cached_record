@@ -166,6 +166,14 @@ module CachedRecord
         as_cache_json.to_json
       end
 
+      def cache
+        Cache.set self
+      end
+
+      def expire
+        Cache.expire self
+      end
+
     private
 
       def cache_json_options
