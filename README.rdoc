@@ -1,6 +1,6 @@
 == CachedRecord {<img src="https://secure.travis-ci.org/archan937/cached_record.png"/>}[http://travis-ci.org/archan937/cached_record] {<img src="https://codeclimate.com/github/archan937/cached_record.png"/>}[https://codeclimate.com/github/archan937/cached_record]
 
-Cache (and optionally memoize) ActiveRecord or DataMapper records in Redis or Memcached to avoid database queries.
+Cache (and optionally memoize) ActiveRecord or DataMapper records in Redis or Memcached.
 
 === Installation
 
@@ -380,7 +380,7 @@ Please note that you have to run both a Redis server and a Memcached server loca
 
 === License
 
-Copyright (c) 2013 Paul Engel, released under the MIT license
+Copyright (c) 2014 Paul Engel, released under the MIT license
 
 http://gettopup.com – http://github.com/archan937 – http://twitter.com/archan937 – {pm_engel@icloud.com}[mailto:pm_engel@icloud.com]
 

@@ -1,5 +1,5 @@
 = CachedRecord CHANGELOG
 
-== Version 0.1.0 (October xx, 2013)
+== Version 0.1.0 (February 18, 2014)
 
 * Initial release
