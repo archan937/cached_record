@@ -1,5 +1,9 @@
 = CachedRecord CHANGELOG
 
+== Version 0.1.1 (February 27, 2014)
+
+* Specified Redis >= 3.0.5 (see https://github.com/redis/redis-rb/blob/v3.0.4/lib/redis.rb#L628 vs https://github.com/redis/redis-rb/blob/v3.0.5/lib/redis.rb#L658)
+
 == Version 0.1.0 (February 18, 2014)
 
 * Initial release

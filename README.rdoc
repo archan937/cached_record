@@ -333,7 +333,7 @@ As you probably already noticed, the <tt>CachedRecord</tt> repo is provided with
 Run the following command in your console:
 
   $ script/console
-  Loading CachedRecord development environment (0.1.0)
+  Loading CachedRecord development environment (0.1.1)
   [1] pry(main)> a = Article.cached(1)
   => #<Article id: 1, title: "Behold! It's CachedRecord!", content: nil, author_id: 1, foo_id: nil, published_at: nil, created_at: nil, updated_at: nil>
   [2] pry(main)> a.object_id == Article.cached(1).object_id

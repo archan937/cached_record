@@ -5,7 +5,7 @@ module Unit
 
     describe CachedRecord do
       it "has the current version" do
-        version = "0.1.0"
+        version = "0.1.1"
         assert_equal version, CachedRecord::VERSION
         assert File.read(path "CHANGELOG.rdoc").include?("Version #{version}")
         assert File.read(path "VERSION").include?(version)
