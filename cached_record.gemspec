@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.version       = CachedRecord::VERSION
 
   gem.add_dependency "dalli"
-  gem.add_dependency "redis"
+  gem.add_dependency "redis", ">= 3.0.5"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "pry"
   gem.add_development_dependency "mysql2"
