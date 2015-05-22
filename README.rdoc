@@ -326,6 +326,12 @@ You can retain memoized instances for a specific period of time. This reduces ca
 
 In this case, memoized <tt>Article</tt> instances are retained for at least 5 seconds.
 
+===== Clearing the cache
+
+You can easily clear the memoized CachedRecord cache by invoking the following:
+
+  CachedRecord::Cache.clear!
+  
 == Using the console
 
 As you probably already noticed, the <tt>CachedRecord</tt> repo is provided with a <tt>script/console</tt> command which you can use for development / testing purposes. Please note that you have to run a Redis server locally.
