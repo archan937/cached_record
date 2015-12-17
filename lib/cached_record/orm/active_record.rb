@@ -55,7 +55,7 @@ module CachedRecord
         end
         def cache_foreign_keys
           (cache_json_options[:include] || {}).inject({}) do |json, name|
-            reflection = self.class.reflections[name]
+            reflection = self.class.reflections[name.to_s] || self.class.reflections[name.to_sym]
             json.merge cache_foreign_key(name, reflection, send(name))
           end
         end
