@@ -14,10 +14,15 @@ Gem::Specification.new do |gem|
   gem.name          = "cached_record"
   gem.require_paths = ["lib"]
   gem.version       = CachedRecord::VERSION
+  gem.licenses      = ["MIT"]
 
   gem.add_dependency "dalli"
   gem.add_dependency "redis", ">= 3.0.5"
+
   gem.add_development_dependency "rake"
+  gem.add_development_dependency "simplecov"
+  gem.add_development_dependency "minitest"
+  gem.add_development_dependency "mocha"
   gem.add_development_dependency "pry"
   gem.add_development_dependency "mysql2"
   gem.add_development_dependency "activerecord"
